@@ -9,7 +9,7 @@
 <h1>Driver verification</h1>
 <table><caption>Registered drivers</caption><thead><tr><th>Name</th><th>Email</th><th>Plate</th><th>License</th><th>Status</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table>
 <p id="empty" class="msg" hidden>No drivers have signed up yet.</p>
-<dialog id="dlg" style="border:0;border-radius:14px;padding:16px;max-width:92vw"><img id="pic" alt="" style="max-width:100%;max-height:70vh;display:block"><p style="margin-top:10px"><button class="btn" onclick="dlg.close()">Close</button></p></dialog>
+<dialog id="dlg" style="margin:auto;border:0;border-radius:14px;padding:16px;width:min(92vw,960px)"><img id="pic" alt="" style="width:100%;max-height:80vh;object-fit:contain;display:block"><p style="margin-top:10px"><button class="btn" onclick="dlg.close()">Close</button></p></dialog>
 <script type="module">
 import {$,db,users,doc,getDoc,onSnapshot,updateDoc,query,where,watchUser,esc} from "./app.js";
 await watchUser("admin");

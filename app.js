@@ -34,15 +34,14 @@ export const time12 = t => { const [h, m] = t.split(":"); return (h % 12 || 12) 
 export const tag = g => "#" + g.code + "-" + time12(g.depart).replace(" ", "");
 
 // Create the login, then save name + role (and plate for drivers) in the "users" collection.
-export function photoData(file, max = 700) { // shrink a picture to a small JPEG text string (fits in Firestore)
-  return new Promise((ok, bad) => {
-    const img = new Image(), r = new FileReader();
-    r.onload = () => img.src = r.result; r.onerror = bad;
-    img.onerror = () => bad(new Error("That file is not a picture."));
-    img.onload = () => { const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement("canvas");
-      c.width = img.width * k; c.height = img.height * k; c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); ok(c.toDataURL("image/jpeg", 0.7)); };
-    r.readAsDataURL(file);
-  });
+export async function photoData(file, max = 1600) { // shrink a picture to a JPEG text string (up to 1600px) so it fits in Firestore
+  const bmp = await createImageBitmap(file, { imageOrientation: "from-image" }).catch(() => { throw new Error("That file is not a picture."); });
+  const k = Math.min(1, max / Math.max(bmp.width, bmp.height)), c = document.createElement("canvas");
+  c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+  c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+  let q = 0.92, d = c.toDataURL("image/jpeg", q);
+  while (d.length > 900000 && q > 0.4) { q -= 0.1; d = c.toDataURL("image/jpeg", q); } // Firestore documents max out near 1 MB
+  return d;
 }
 export async function signUp(name, email, password, role, plate, photo) {
   const c = await createUserWithEmailAndPassword(auth, email, password);
