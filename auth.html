@@ -13,7 +13,7 @@
 <label for="fullname">Full name</label><input id="fullname" placeholder="Juan Luna Bernabe" autocomplete="name">
 <div id="plateBox" hidden><label for="plate">Tricycle plate or body number</label><input id="plate">
 <label for="lic">Photo of your driver's license</label><input id="lic" type="file" accept="image/*"></div></div>
-<label for="email">Email</label><input id="email" type="email" placeholder="name@student.tsu.edu.ph" autocomplete="email">
+<label for="email">Email</label><input id="email" type="email" placeholder="name@email.com" autocomplete="email">
 <label for="pw">Password (8+ characters)</label><input id="pw" type="password" autocomplete="current-password">
 <p class="msg err" id="msg" role="alert"></p>
 <button class="btn" id="go" type="submit" style="width:100%;margin:0">Log in</button></fieldset></form></div>
@@ -22,11 +22,13 @@ import {$,photoData,watchUser,signUp,logIn,STUDENT_DOMAIN,ADMIN_EMAIL,HOME} from
 watchUser().then(p=>{if(p)location.href=HOME[p.role]}); // already logged in: skip this page
 const E={"auth/email-already-in-use":"That email already has an account. Try logging in.","auth/invalid-credential":"Wrong email or password.","auth/operation-not-allowed":"Turn on Email/Password in Firebase Authentication.","auth/network-request-failed":"No internet connection."};
 let up=false;const role=()=>document.querySelector("[name=role]:checked").value;
+// Only passengers need a TSU student email, so only they get that hint.
+function ph(){$("email").placeholder=up&&role()==="student"?"name@student.tsu.edu.ph":"name@email.com"}
 function mode(u){up=u;$("upOnly").hidden=!u;$("title").textContent=$("go").textContent=u?"Sign up":"Log in";
  $("sub").textContent=u?"Create an account to start sharing rides.":"Welcome back to Sabay-Tayo.";
- $("tabin").className=u?"":"on";$("tabup").className=u?"on":"";$("msg").textContent=""}
+ ph();$("tabin").className=u?"":"on";$("tabup").className=u?"on":"";$("msg").textContent=""}
 $("tabin").onclick=()=>mode(false);$("tabup").onclick=()=>mode(true);
-document.querySelectorAll("[name=role]").forEach(r=>r.onchange=()=>$("plateBox").hidden=role()!=="driver");
+document.querySelectorAll("[name=role]").forEach(r=>r.onchange=()=>{$("plateBox").hidden=role()!=="driver";ph()});
 $("form").onsubmit=async e=>{e.preventDefault();const msg=$("msg");msg.textContent="";const mail=$("email").value.trim().toLowerCase();
  if(!mail.includes("@"))return msg.textContent="Enter a valid email.";
  if($("pw").value.length<8)return msg.textContent="Password needs at least 8 characters.";
