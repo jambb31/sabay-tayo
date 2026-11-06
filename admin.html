@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin | Sabay-Tayo TSU Tricycle Fare Splitter</title>
+<meta name="description" content="Admin page for verifying tricycle drivers.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛺</text></svg>">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="style.css"></head><body>
+<header><div class="bar"><span class="logo"><span class="mark">S</span>Sabay-Tayo</span><div id="session" hidden><span id="who"></span><button class="btn light" id="logout" type="button">Sign out</button></div></div></header><main>
+<h1>Driver verification</h1>
+<table><caption>Registered drivers</caption><thead><tr><th>Name</th><th>Email</th><th>Plate</th><th>License</th><th>Status</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table>
+<p id="empty" class="msg" hidden>No drivers have signed up yet.</p>
+<dialog id="dlg" style="border:0;border-radius:14px;padding:16px;max-width:92vw"><img id="pic" alt="" style="max-width:100%;max-height:70vh;display:block"><p style="margin-top:10px"><button class="btn" onclick="dlg.close()">Close</button></p></dialog>
+<script type="module">
+import {$,db,users,doc,getDoc,onSnapshot,updateDoc,query,where,watchUser,esc} from "./app.js";
+await watchUser("admin");
+onSnapshot(query(users,where("role","==","driver")),s=>{$("empty").hidden=!s.empty;
+ $("rows").innerHTML=s.docs.map(d=>{const u=d.data();return `<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.plate||"")}</td><td><button class="btn light line" data-lic="${d.id}">View photo</button></td><td><span class="badge ${u.verified==="verified"?"ready":u.verified==="rejected"?"urgent":"wait"}">${u.verified}</span></td>
+ <td><button class="btn green" data-id="${d.id}" data-v="verified">Verify</button><button class="btn red" data-id="${d.id}" data-v="rejected">Reject</button></td></tr>`}).join("")});
+$("rows").onclick=async e=>{const {id,v,lic}=e.target.dataset;
+ if(lic){const s=await getDoc(doc(db,"licenses",lic));$("pic").src=s.exists()?s.data().photo:"";$("pic").alt=s.exists()?"Driver license photo":"No photo uploaded";$("dlg").showModal()}
+ if(id)updateDoc(doc(db,"users",id),{verified:v})};
+</script>
+</main><footer><p>Sabay-Tayo for TSU students. Web Development final term project.</p></footer></body></html>
