@@ -1,12 +1,12 @@
 // Passenger page: see groups, create a group, wait for members, show the QR code,
-// track the ride, share the ETA, pick a discount, and see the fare breakdown.
+// follow the ride steps, pick a discount, and see the fare breakdown.
 import {
   db, groups, collection, onSnapshot, query, orderBy, addDoc, serverTimestamp,
-  GATES, DESTINATIONS, CODES, MAX_LOAD_FEE, MAX_EXTRA_KM,
-  getFare, joinGroup, leaveGroup, voteGo, cancelGroup, updateMember, syncTrack,
-  scanLink, trackLink, watchUser, qrHTML,
-  esc, money, time12, tag, findMember, newMember, inTrip, discountOptions, DISCOUNTS,
-  fareTable, fareBreakdownHTML, fareMatrixHTML, ratesHTML, trackerHTML, etaText
+  GATES, CODES, MAX_LOAD_FEE,
+  getFare, destinationsFor, joinGroup, leaveGroup, voteGo, cancelGroup, updateMember,
+  scanLink, watchUser, qrHTML,
+  esc, money, time12, tag, findMember, newMember, inTrip, DISCOUNTS, showFinished, markSeen,
+  fareTable, fareBreakdownHTML, fareMatrixHTML, ratesHTML, trackerHTML
 } from "./app.js";
 
 const user = await watchUser("student");
@@ -28,84 +28,33 @@ const msgText = document.getElementById("msg");
 // ---------- Fill the page ----------
 for (let i = 0; i < GATES.length; i++) {
   gateSelect.innerHTML += "<option>" + GATES[i] + "</option>";
-  document.getElementById("sgate").innerHTML += "<option>" + GATES[i] + "</option>";
-}
-for (let i = 0; i < DESTINATIONS.length; i++) {
-  destSelect.innerHTML += "<option>" + DESTINATIONS[i] + "</option>";
-  document.getElementById("sdest").innerHTML += "<option>" + DESTINATIONS[i] + "</option>";
 }
 document.getElementById("me").textContent = user.name.charAt(0).toUpperCase();
 document.getElementById("rates").innerHTML = ratesHTML();
 faresBox.innerHTML = fareMatrixHTML() + ratesHTML();
+
+// The destination list depends on the gate (you cannot ride from a campus to itself).
+function fillDestinations() {
+  const list = destinationsFor(gateSelect.value);
+  destSelect.innerHTML = "";
+  for (let i = 0; i < list.length; i++) {
+    destSelect.innerHTML += "<option>" + list[i] + "</option>";
+  }
+}
 
 // Show the fare from the fare matrix for the chosen gate + destination.
 function showHint() {
   const fare = getFare(gateSelect.value, destSelect.value);
   hintText.textContent = "Total fare " + money(fare) + " for this route, split equally by everyone who joins.";
 }
-gateSelect.addEventListener("change", showHint);
+
+gateSelect.addEventListener("change", function () {
+  fillDestinations();
+  showHint();
+});
 destSelect.addEventListener("change", showHint);
+fillDestinations();
 showHint();
-
-// ---------- Fare splitter (a calculator, nothing is saved) ----------
-const splitter = document.getElementById("splitter");
-const splitRows = document.getElementById("srows");
-const splitResult = document.getElementById("sresult");
-const splitCount = document.getElementById("scount");
-
-// One row of inputs for each passenger.
-function buildSplitRows() {
-  const count = Number(splitCount.value);
-  let html = "";
-  for (let i = 0; i < count; i++) {
-    html += '<div class="splitrow">' +
-      "<strong>Passenger " + (i + 1) + "</strong>" +
-      '<div><label for="sdisc' + i + '">Discount</label><select id="sdisc' + i + '">' + discountOptions("none") + "</select></div>" +
-      '<div><label for="sload' + i + '">Load fee (PHP)</label><input id="sload' + i + '" type="number" min="0" max="' + MAX_LOAD_FEE + '" value="0"></div>' +
-      '<div><label for="skm' + i + '">Extra km</label><input id="skm' + i + '" type="number" min="0" max="' + MAX_EXTRA_KM + '" step="0.5" value="0"></div>' +
-      "</div>";
-  }
-  splitRows.innerHTML = html;
-  recalcSplit();
-}
-
-// Read a number box and keep it between 0 and max.
-function readNumber(id, max) {
-  let n = Number(document.getElementById(id).value);
-  if (isNaN(n) || n < 0) {
-    n = 0;
-  }
-  if (n > max) {
-    n = max;
-  }
-  return n;
-}
-
-// Build a pretend group from the inputs and show it with the same table the real groups use.
-function recalcSplit() {
-  const count = Number(splitCount.value);
-  const members = [];
-  for (let i = 0; i < count; i++) {
-    members.push({
-      name: "Passenger " + (i + 1),
-      loadFee: readNumber("sload" + i, MAX_LOAD_FEE),
-      extraKm: readNumber("skm" + i, MAX_EXTRA_KM),
-      discount: document.getElementById("sdisc" + i).value
-    });
-  }
-  const fake = {
-    origin: document.getElementById("sgate").value,
-    destination: document.getElementById("sdest").value,
-    members: members
-  };
-  fake.fare = getFare(fake.origin, fake.destination);
-  splitResult.innerHTML = fareTable(fake, true);
-}
-
-splitCount.addEventListener("change", buildSplitRows);
-splitter.addEventListener("input", recalcSplit);
-splitter.addEventListener("change", recalcSplit);
-buildSplitRows();
 
 // ---------- Small helpers ----------
 // One circle per seat: a letter for a member, a + for an empty seat.
@@ -143,11 +92,9 @@ function findGroup(id) {
   return null;
 }
 
-// Ride tracker steps + the ETA + the button that shares the tracking link.
+// The ride steps (group forming, ready, driver accepted, on the way, arrived).
 function trackBlock(g) {
-  return trackerHTML(g.status) +
-    '<p class="small">' + esc(etaText(g)) + "</p>" +
-    '<button class="btn light line" data-act="share" data-id="' + g.id + '">Share my ETA</button>';
+  return trackerHTML(g.status);
 }
 
 // One toggle switch (a checkbox that looks like a switch).
@@ -164,10 +111,10 @@ function switchHTML(act, g, checked, text, discountId) {
     '<span class="slider"></span>' + text + "</label>";
 }
 
-// My special discount toggles and the heavy load toggle. Only one discount can be on.
+// My PWD discount toggle and the heavy load toggle.
 function optionsBlock(g, me) {
   let html = '<div class="options"><h3>My options</h3>';
-  html += '<p class="small">Special discount (show your ID to the driver):</p>';
+  html += '<p class="small">PWD discount (show your PWD ID to the driver):</p>';
   for (let i = 0; i < DISCOUNTS.length; i++) {
     if (DISCOUNTS[i].id !== "none") {
       const text = DISCOUNTS[i].label + " (" + Math.round(DISCOUNTS[i].rate * 100) + "% off)";
@@ -345,7 +292,7 @@ function findMine() {
       continue;
     }
     const live = g.status === "open" || g.status === "full" || g.status === "ready" || inTrip(g);
-    const doneNotSeen = g.status === "done" && !localStorage.getItem("seen_" + g.id);
+    const doneNotSeen = showFinished(g, user.email);
     if (live || doneNotSeen) {
       return g;
     }
@@ -376,21 +323,6 @@ function draw() {
     html = '<div class="card empty-card"><p>No groups available right now.</p></div>';
   }
   show(listBox, html);
-}
-
-// ---------- Share the ETA with family or friends ----------
-async function shareEta(g) {
-  const link = trackLink(g.id);
-  const text = "I'm riding a tricycle from " + g.origin + " to " + g.destination + ". Follow my ride here:";
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: "My Sabay-Tayo ride", text: text, url: link });
-    } catch (error) {
-      // the person closed the share sheet, nothing to do
-    }
-  } else {
-    prompt("Copy this link and send it to your family or friends:", link);
-  }
 }
 
 // ---------- Buttons ----------
@@ -427,14 +359,11 @@ document.body.addEventListener("click", async function (e) {
       } else {
         await leaveGroup(id, user);
       }
-    } else if (act === "share") {
-      await shareEta(findGroup(id));
     } else if (act === "enlarge") {
       qrBig = !qrBig;
       draw();
     } else if (act === "seen") {
-      localStorage.setItem("seen_" + id, "1");
-      draw();
+      await markSeen(id, user.email);
     } else if (act === "report") {
       const text = prompt("What happened?");
       if (text) {
@@ -503,7 +432,7 @@ document.getElementById("form").addEventListener("submit", async function (e) {
   }
   msgText.textContent = "";
 
-  const ref = await addDoc(groups, {
+  await addDoc(groups, {
     origin: origin,
     destination: dest,
     fare: getFare(origin, dest),
@@ -515,7 +444,6 @@ document.getElementById("form").addEventListener("submit", async function (e) {
     status: "open",
     createdAt: serverTimestamp()
   });
-  await syncTrack(ref.id);
   creating = false;
   draw();
 });

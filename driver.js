@@ -3,8 +3,8 @@ import {
   db, doc, groups, collection, onSnapshot, addDoc, query, orderBy, serverTimestamp,
   acceptGroup, saveFees, startTrip, finishTrip, watchUser, getParam,
   FEE_PER_KM, MAX_LOAD_FEE, MAX_EXTRA_KM,
-  esc, money, time12, tag, shareOf, totalOf, inTrip, discountOptions,
-  fareTable, fareMatrixHTML, ratesHTML, trackerHTML, etaText
+  esc, money, time12, tag, shareOf, totalOf, inTrip, discountOptions, showFinished, markSeen,
+  fareTable, fareMatrixHTML, ratesHTML, trackerHTML
 } from "./app.js";
 
 const me = await watchUser("driver");
@@ -97,7 +97,7 @@ function feeEditor(g) {
     html += "</tr>";
   }
   html += "</tbody></table></div>";
-  html += '<p class="small">Discount: check the passenger\'s ID first. ' +
+  html += '<p class="small">PWD discount: check the passenger\'s PWD ID first. ' +
     "Load fee: charge a passenger who brings something heavy (up to " + money(MAX_LOAD_FEE) + "). " +
     "Extra km: how far past the drop-off the passenger wants to go. The app adds " + money(FEE_PER_KM) + " for every kilometer.</p>";
   return html;
@@ -205,7 +205,7 @@ function view() {
     if (inTrip(g)) {
       current = g;
     }
-    if (g.status === "done" && !localStorage.getItem("dseen_" + g.id)) {
+    if (showFinished(g, me.email)) {
       finished = g;
     }
   }
@@ -226,7 +226,6 @@ function view() {
       "<p><strong>" + esc(current.origin) + " to " + esc(current.destination) + "</strong><br>" +
       '<span class="small">' + esc(tag(current)) + "</span></p>" +
       trackerHTML(current.status) +
-      '<p class="small">' + esc(etaText(current)) + "</p>" +
       feeEditor(current) +
       '<button class="btn light line" data-act="save" data-id="' + current.id + '">Save fees</button>' +
       mainButton +
@@ -308,8 +307,7 @@ document.body.addEventListener("click", async function (e) {
         await finishTrip(id, members);
       }
     } else if (act === "seen") {
-      localStorage.setItem("dseen_" + id, "1");
-      draw();
+      await markSeen(id, me.email);
     } else if (act === "report") {
       const text = prompt("What happened?");
       if (text) {

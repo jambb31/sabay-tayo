@@ -70,15 +70,13 @@ header {
   font-size: 1.3rem;
 }
 
+/* the small logo in the header */
 .mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
+  display: block;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
-  background: var(--blue);
-  color: #fff;
+  background: #fff;
 }
 
 .bar-right {
@@ -427,6 +425,19 @@ td input {
   position: relative;
 }
 
+/* the big logo on the welcome page */
+.herologo {
+  display: block;
+  width: 200px;
+  max-width: 60%;
+  height: auto;
+  margin: 0 auto 20px;
+  padding: 10px;
+  border-radius: 20px;
+  background: #fff;
+  position: relative;
+}
+
 .hero2 h1 {
   font-size: 2.2rem;
   margin: 0 auto 14px;
@@ -684,20 +695,6 @@ td input {
   outline-offset: 2px;
 }
 
-/* ---------- Fare splitter ---------- */
-.splitrow {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2px;
-  border-top: 1px solid #dbe2ee;
-  padding: 10px 0;
-  margin-top: 10px;
-}
-
-#sresult {
-  margin-top: 6px;
-}
-
 td select {
   padding: 6px;
 }
@@ -722,12 +719,6 @@ td select {
 
 /* ---------- Media queries ---------- */
 @media screen and (min-width: 600px) {
-  .splitrow {
-    grid-template-columns: 1fr 2fr 1fr 1fr;
-    gap: 10px;
-    align-items: end;
-  }
-
   .grid {
     grid-template-columns: repeat(2, 1fr);
   }

@@ -37,12 +37,6 @@ service cloud.firestore {
       allow read, create, update, delete: if signedIn();
     }
 
-    // Public tracking pages: anyone with the link can read. It has no emails in it.
-    match /tracks/{id} {
-      allow read: if true;
-      allow create, update: if signedIn();
-    }
-
     // Issue reports: signed-in users can send, only the admin can read.
     match /reports/{id} {
       allow create: if signedIn();

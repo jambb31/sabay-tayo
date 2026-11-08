@@ -6,7 +6,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, doc, getDoc, setDoc, onSnapshot, updateDoc,
-  runTransaction, query, orderBy, where, serverTimestamp
+  runTransaction, query, orderBy, where, serverTimestamp, arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import { qrSvg } from "./qr.js";
@@ -31,31 +31,33 @@ export { getDoc, collection, signOut, addDoc, doc, onSnapshot, updateDoc, query,
 // SETTINGS (change the numbers here, every page uses them)
 // ---------------------------------------------------------------------------
 export const GATES = ["TSU Main Gate", "TSU San Isidro Gate", "TSU Lucinda Gate"];
-export const DESTINATIONS = ["Magic Star", "Villa Isabela", "SM City Tarlac"];
+export const DESTINATIONS = ["TSU Main Campus", "TSU San Isidro Campus", "TSU Lucinda Campus", "Magic Star", "SM City Tarlac"];
 
-// FARE MATRIX: the fixed total fare per tricycle for every route.
-// Row = pickup gate, column = destination. Replace these numbers with the official matrix.
+// FARE MATRIX: the fixed TOTAL fare per tricycle (up to 4 passengers) for every route.
+// Row = pickup gate, column = destination. A route that is missing here does not exist
+// (you cannot ride from the Main Gate to the Main Campus), so it is not offered.
+// Campus to campus is the base: PHP 20 per student x 4 students = PHP 80.
+// Farther drop-offs cost more. All numbers are placeholders: confirm them with your professor.
 export const FARE_MATRIX = {
-  "TSU Main Gate":       { "Magic Star": 120, "Villa Isabela": 120, "SM City Tarlac": 160 },
-  "TSU San Isidro Gate": { "Magic Star": 120, "Villa Isabela": 120, "SM City Tarlac": 160 },
-  "TSU Lucinda Gate":    { "Magic Star": 120, "Villa Isabela": 120, "SM City Tarlac": 160 }
+  "TSU Main Gate":       { "TSU San Isidro Campus": 80, "TSU Lucinda Campus": 120, "Magic Star": 100, "SM City Tarlac": 120 },
+  "TSU San Isidro Gate": { "TSU Main Campus": 80, "TSU Lucinda Campus": 140, "Magic Star": 100, "SM City Tarlac": 120 },
+  "TSU Lucinda Gate":    { "TSU Main Campus": 120, "TSU San Isidro Campus": 140, "Magic Star": 120, "SM City Tarlac": 140 }
 };
 
-export const CODES = { "Magic Star": "MSTAR", "Villa Isabela": "VISA", "SM City Tarlac": "SMCT" }; // short group-code names
+export const CODES = {
+  "TSU Main Campus": "MAIN",
+  "TSU San Isidro Campus": "SIC",
+  "TSU Lucinda Campus": "LUC",
+  "Magic Star": "MSTAR",
+  "SM City Tarlac": "SMCT"
+}; // short group-code names
 
-// TRIP TIME MATRIX: about how many minutes the ride takes. Used for the ETA. Replace with real estimates.
-export const TRIP_MINUTES = {
-  "TSU Main Gate":       { "Magic Star": 15, "Villa Isabela": 15, "SM City Tarlac": 25 },
-  "TSU San Isidro Gate": { "Magic Star": 15, "Villa Isabela": 15, "SM City Tarlac": 25 },
-  "TSU Lucinda Gate":    { "Magic Star": 15, "Villa Isabela": 15, "SM City Tarlac": 25 }
-};
-
-// SPECIAL DISCOUNTS: the discount takes off a percent of that passenger's share of the fare.
+// PWD DISCOUNT: it takes off a percent of that passenger's share of the fare.
+// Only students can be passengers, so there is no student or senior discount.
 // 20% is the usual rate in Philippine discount laws. Confirm the rate that applies to tricycles.
+// (Old groups that saved "student" or "senior" are read as "No discount", see getDiscount.)
 export const DISCOUNTS = [
   { id: "none", label: "No discount", rate: 0 },
-  { id: "student", label: "Student", rate: 0.2 },
-  { id: "senior", label: "Senior citizen", rate: 0.2 },
   { id: "pwd", label: "PWD", rate: 0.2 }
 ];
 
@@ -65,7 +67,7 @@ export const MAX_LOAD_FEE = 100;  // the most a driver can charge for a heavy lo
 export const MAX_EXTRA_KM = 10;   // the most extra kilometers a driver can enter
 
 // The address of your PUBLISHED website, with a / at the end. Example: "https://sabay-tayo.web.app/"
-// The QR codes and the "Share my ETA" links are built from it, so other phones can open them.
+// The QR codes are built from it, so other phones can open them.
 // Leave it "" while you test on your own computer (the links then use the current address).
 export const SITE_URL = "";
 
@@ -163,7 +165,21 @@ export function qrHTML(link, label, big) {
 // FARE FUNCTIONS
 // ---------------------------------------------------------------------------
 export function getFare(origin, destination) {
-  return FARE_MATRIX[origin][destination];
+  if (FARE_MATRIX[origin] && FARE_MATRIX[origin][destination] !== undefined) {
+    return FARE_MATRIX[origin][destination];
+  }
+  return null; // no such route
+}
+
+// The destinations you can pick from one gate (the matrix only has real routes).
+export function destinationsFor(origin) {
+  const list = [];
+  for (let i = 0; i < DESTINATIONS.length; i++) {
+    if (getFare(origin, DESTINATIONS[i]) !== null) {
+      list.push(DESTINATIONS[i]);
+    }
+  }
+  return list;
 }
 
 // Everyone splits the base fare equally.
@@ -206,6 +222,21 @@ export function findMember(g, email) {
 
 export function newMember(user) {
   return { name: user.name, email: user.email, loadFee: 0, extraKm: 0, discount: "none", heavyLoad: false };
+}
+
+// A finished trip is shown on the "All set" screen until this person presses "Back to groups".
+// That choice is saved in the group itself (seenBy), so it follows the account to every device.
+// Trips finished before this change have no finishedAt, so they are treated as already seen.
+export function showFinished(g, email) {
+  if (g.status !== "done" || !g.finishedAt) {
+    return false;
+  }
+  const seen = g.seenBy || [];
+  return seen.indexOf(email) === -1;
+}
+
+export function markSeen(id, email) {
+  return updateDoc(doc(db, "groups", id), { seenBy: arrayUnion(email) });
 }
 
 // The trip has been accepted by a driver (it may or may not have started).
@@ -297,7 +328,12 @@ export function fareMatrixHTML() {
   for (let g = 0; g < GATES.length; g++) {
     html += '<tr><th>' + GATES[g] + '</th>';
     for (let d = 0; d < DESTINATIONS.length; d++) {
-      html += '<td>' + money(getFare(GATES[g], DESTINATIONS[d])) + '</td>';
+      const fare = getFare(GATES[g], DESTINATIONS[d]);
+      if (fare === null) {
+        html += '<td>-</td>';
+      } else {
+        html += '<td>' + money(fare) + '</td>';
+      }
     }
     html += '</tr>';
   }
@@ -308,11 +344,11 @@ export function fareMatrixHTML() {
 // Explains the two extra fees.
 export function ratesHTML() {
   return '<p class="small">Extra fees are added by the driver. Load fee: for heavy items, up to ' + money(MAX_LOAD_FEE) +
-    '. Extra distance: ' + money(FEE_PER_KM) + ' for every kilometer past your drop-off. Students, senior citizens and PWD can pick a discount (show your ID to the driver).</p>';
+    '. Extra distance: ' + money(FEE_PER_KM) + ' for every kilometer past your drop-off. PWD passengers can turn on the PWD discount (show your PWD ID to the driver).</p>';
 }
 
 // ---------------------------------------------------------------------------
-// RIDE TRACKING + ETA (there is no map, so tracking = the ride status + an estimated arrival time)
+// RIDE PROGRESS (there is no map, so the ride is shown as 5 steps)
 // ---------------------------------------------------------------------------
 const STAGES = ["Group forming", "Ready to go", "Driver accepted", "On the way", "Arrived"];
 
@@ -354,83 +390,6 @@ export function trackerHTML(status) {
   }
   html += '</ol>';
   return html;
-}
-
-function pad(n) {
-  if (n < 10) {
-    return "0" + n;
-  }
-  return String(n);
-}
-
-// 1760000000000 -> "3:45 PM"
-export function clockTime(ms) {
-  const d = new Date(ms);
-  return time12(pad(d.getHours()) + ":" + pad(d.getMinutes()));
-}
-
-export function tripMinutes(g) {
-  return TRIP_MINUTES[g.origin][g.destination];
-}
-
-// Estimated arrival = when the driver pressed Start trip + the minutes from the trip time matrix.
-export function etaAt(g) {
-  return g.startedAt + tripMinutes(g) * 60000;
-}
-
-// The ETA sentence. A clock time only appears after the trip starts, because before that
-// nobody knows when the group will really leave.
-export function etaText(g) {
-  if (g.status === "done") {
-    return "Arrived.";
-  }
-  if (g.status === "cancelled") {
-    return "";
-  }
-  const minutes = tripMinutes(g);
-  if (g.status === "ontrip" && g.startedAt) {
-    const mins = Math.ceil((etaAt(g) - Date.now()) / 60000);
-    if (mins <= 0) {
-      return "On the way. Should be arriving now.";
-    }
-    return "On the way. Estimated arrival " + clockTime(etaAt(g)) + " (in " + mins + " min).";
-  }
-  if (g.status === "open") {
-    return "Planned departure " + time12(g.depart) + ". The ride takes about " + minutes + " min.";
-  }
-  return "The ride takes about " + minutes + " min. The arrival time shows once the driver starts the trip.";
-}
-
-// The link a passenger shares with family or friends. It opens track.html (no login needed).
-export function trackLink(id) {
-  return siteFolder() + "track.html?id=" + id;
-}
-
-// Copy the group's status into the "tracks" collection. That small document has NO emails,
-// so the tracking page can be public without leaking anything private.
-export async function syncTrack(id) {
-  try {
-    const s = await getDoc(doc(db, "groups", id));
-    if (!s.exists()) {
-      await updateDoc(doc(db, "tracks", id), { status: "cancelled", updatedAt: Date.now() });
-      return;
-    }
-    const g = s.data();
-    await setDoc(doc(db, "tracks", id), {
-      origin: g.origin,
-      destination: g.destination,
-      depart: g.depart,
-      departAt: g.departAt,
-      status: g.status,
-      riders: g.members.length,
-      driverName: g.driverName || "",
-      driverPlate: g.driverPlate || "",
-      startedAt: g.startedAt || 0,
-      updatedAt: Date.now()
-    });
-  } catch (error) {
-    console.log("Could not update tracking: " + error.message);
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -551,7 +510,6 @@ export async function joinGroup(id, user) {
     // new member: the leave-now poll starts over
     t.update(ref, { members: members, status: status, votes: [] });
   });
-  await syncTrack(id);
 }
 
 export async function leaveGroup(id, user) {
@@ -574,7 +532,6 @@ export async function leaveGroup(id, user) {
       t.delete(ref);
     }
   });
-  await syncTrack(id);
 }
 
 // Poll: any time while waiting, the members can vote to leave early (even alone).
@@ -614,7 +571,6 @@ export async function voteGo(id, user, yes) {
     }
     t.update(ref, { votes: votes, status: status });
   });
-  await syncTrack(id);
 }
 
 // The QR code holds this link. A phone camera opens it and the driver sees the group.
@@ -636,7 +592,6 @@ export async function acceptGroup(id, driver) {
       driverPlate: driver.plate
     });
   });
-  await syncTrack(id);
 }
 
 // Passenger changes their own option (their discount, or the heavy load flag) while the trip has not started.
@@ -663,7 +618,6 @@ export async function updateMember(id, email, field, value) {
 // The creator cancels the whole group.
 export async function cancelGroup(id) {
   await updateDoc(doc(db, "groups", id), { status: "cancelled" });
-  await syncTrack(id);
 }
 
 // The driver saves the fees (discount, load fee, extra km) without changing the trip status.
@@ -671,14 +625,12 @@ export async function saveFees(id, members) {
   await updateDoc(doc(db, "groups", id), { members: members });
 }
 
-// The driver starts the trip. The ETA counts from this moment. members = the fees the driver typed.
+// The driver starts the trip. members = the fees the driver typed.
 export async function startTrip(id, members) {
-  await updateDoc(doc(db, "groups", id), { members: members, status: "ontrip", startedAt: Date.now() });
-  await syncTrack(id);
+  await updateDoc(doc(db, "groups", id), { members: members, status: "ontrip" });
 }
 
 // The driver finishes the trip and saves the final fees.
 export async function finishTrip(id, members) {
-  await updateDoc(doc(db, "groups", id), { members: members, status: "done" });
-  await syncTrack(id);
+  await updateDoc(doc(db, "groups", id), { members: members, status: "done", finishedAt: Date.now() });
 }
