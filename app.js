@@ -25,23 +25,55 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const groups = collection(db, "groups");
 export const users = collection(db, "users");
-export { getDoc, collection, signOut, addDoc, doc, onSnapshot, updateDoc, query, orderBy, where, serverTimestamp };
+export { getDoc, collection, addDoc, doc, onSnapshot, updateDoc, query, orderBy, where, serverTimestamp };
 
 // ---------------------------------------------------------------------------
-// SETTINGS (change the numbers here, every page uses them)
+// SETTINGS (Distance-based TSU Fare Matrix: PHP 40 Base + PHP 25/km)
 // ---------------------------------------------------------------------------
 export const GATES = ["TSU Main Gate", "TSU San Isidro Gate", "TSU Lucinda Gate"];
-export const DESTINATIONS = ["TSU Main Campus", "TSU San Isidro Campus", "TSU Lucinda Campus", "Magic Star", "SM City Tarlac"];
 
-// FARE MATRIX: the fixed TOTAL fare per tricycle (up to 4 passengers) for every route.
-// Row = pickup gate, column = destination. A route that is missing here does not exist
-// (you cannot ride from the Main Gate to the Main Campus), so it is not offered.
-// Campus to campus is the base: PHP 20 per student x 4 students = PHP 80.
-// Farther drop-offs cost more. All numbers are placeholders: confirm them with your professor.
-export const FARE_MATRIX = {
-  "TSU Main Gate":       { "TSU San Isidro Campus": 80, "TSU Lucinda Campus": 120, "Magic Star": 100, "SM City Tarlac": 120 },
-  "TSU San Isidro Gate": { "TSU Main Campus": 80, "TSU Lucinda Campus": 140, "Magic Star": 100, "SM City Tarlac": 120 },
-  "TSU Lucinda Gate":    { "TSU Main Campus": 120, "TSU San Isidro Campus": 140, "Magic Star": 120, "SM City Tarlac": 140 }
+const DESTINATIONS = [
+  "TSU Main Campus",
+  "TSU San Isidro Campus",
+  "TSU Lucinda Campus",
+  "Magic Star",
+  "Siesta Bus Stop",
+  "SM City Tarlac",
+  "My MetroTown Mall",
+  "Palm Plaza Maliwalo"
+];
+
+// FARE MATRIX: Fixed total fare per tricycle (up to 4 passengers) based on road distance.
+// Formula: PHP 40 base + (Distance in km * PHP 25/km), rounded to nearest PHP 20.
+// Same-campus routes are omitted so students cannot book a ride to the gate they are already at.
+const FARE_MATRIX = {
+  "TSU Main Gate": {
+    "Magic Star": 60,             // ~1.0 km -> PHP 15 / student (4 riders)
+    "Siesta Bus Stop": 60,        // ~1.1 km -> PHP 15 / student
+    "SM City Tarlac": 80,         // ~1.8 km -> PHP 20 / student
+    "My MetroTown Mall": 80,      // ~2.0 km -> PHP 20 / student
+    "TSU San Isidro Campus": 80,  // ~2.3 km -> PHP 20 / student
+    "Palm Plaza Maliwalo": 100,   // ~2.8 km -> PHP 25 / student
+    "TSU Lucinda Campus": 160     // ~4.8 km -> PHP 40 / student
+  },
+  "TSU San Isidro Gate": {
+    "My MetroTown Mall": 80,      // ~1.8 km -> PHP 20 / student
+    "TSU Main Campus": 80,        // ~2.3 km -> PHP 20 / student
+    "Siesta Bus Stop": 80,        // ~2.5 km -> PHP 20 / student
+    "Magic Star": 100,            // ~2.8 km -> PHP 25 / student
+    "SM City Tarlac": 120,        // ~3.5 km -> PHP 30 / student
+    "Palm Plaza Maliwalo": 140,   // ~4.6 km -> PHP 35 / student
+    "TSU Lucinda Campus": 200     // ~6.8 km -> PHP 50 / student (cross-city)
+  },
+  "TSU Lucinda Gate": {
+    "Palm Plaza Maliwalo": 80,    // ~2.2 km -> PHP 20 / student
+    "Magic Star": 120,            // ~3.8 km -> PHP 30 / student
+    "Siesta Bus Stop": 120,       // ~4.0 km -> PHP 30 / student
+    "My MetroTown Mall": 140,     // ~4.2 km -> PHP 35 / student
+    "SM City Tarlac": 140,        // ~4.3 km -> PHP 35 / student
+    "TSU Main Campus": 160,       // ~4.8 km -> PHP 40 / student
+    "TSU San Isidro Campus": 200  // ~6.8 km -> PHP 50 / student (cross-city)
+  }
 };
 
 export const CODES = {
@@ -49,7 +81,10 @@ export const CODES = {
   "TSU San Isidro Campus": "SIC",
   "TSU Lucinda Campus": "LUC",
   "Magic Star": "MSTAR",
-  "SM City Tarlac": "SMCT"
+  "Siesta Bus Stop": "SIESTA",
+  "SM City Tarlac": "SMCT",
+  "My MetroTown Mall": "METRO",
+  "Palm Plaza Maliwalo": "PALM"
 }; // short group-code names
 
 // PWD DISCOUNT: it takes off a percent of that passenger's share of the fare.
@@ -69,7 +104,7 @@ export const MAX_EXTRA_KM = 10;   // the most extra kilometers a driver can ente
 // The address of your PUBLISHED website, with a / at the end. Example: "https://sabay-tayo.web.app/"
 // The QR codes are built from it, so other phones can open them.
 // Leave it "" while you test on your own computer (the links then use the current address).
-export const SITE_URL = "";
+const SITE_URL = "";
 
 export const STUDENT_DOMAIN = "@student.tsu.edu.ph"; // set to "" while testing with other emails
 export const ADMIN_EMAIL = "admin@sabaytayo.com"; // signing up with this email creates the admin account
@@ -188,11 +223,11 @@ export function shareOf(g) {
 }
 
 // Extra distance fee = extra kilometers x fee per kilometer.
-export function extraFee(m) {
+function extraFee(m) {
   return (m.extraKm || 0) * FEE_PER_KM;
 }
 
-export function getDiscount(id) {
+function getDiscount(id) {
   for (let i = 0; i < DISCOUNTS.length; i++) {
     if (DISCOUNTS[i].id === id) {
       return DISCOUNTS[i];
@@ -202,7 +237,7 @@ export function getDiscount(id) {
 }
 
 // How much a passenger's discount takes off their share.
-export function discountOf(g, m) {
+function discountOf(g, m) {
   return shareOf(g) * getDiscount(m.discount).rate;
 }
 
@@ -226,7 +261,7 @@ export function newMember(user) {
 
 // A finished trip is shown on the "All set" screen until this person presses "Back to groups".
 // That choice is saved in the group itself (seenBy), so it follows the account to every device.
-// Trips finished before this change have no finishedAt, so they are treated as already seen.
+// Old trips saved without finishedAt are treated as already seen.
 export function showFinished(g, email) {
   if (g.status !== "done" || !g.finishedAt) {
     return false;
@@ -407,7 +442,7 @@ export function ratesHTML() {
 const STAGES = ["Group forming", "Ready to go", "Driver accepted", "On the way", "Arrived"];
 
 // Which step of the ride the group is on (0 = cancelled).
-export function stageOf(status) {
+function stageOf(status) {
   if (status === "open") {
     return 1;
   }
@@ -678,7 +713,7 @@ export async function cancelGroup(id) {
 // The driver saves the fees (discount, load fee, extra km) without changing the trip status.
 export async function saveFees(id, members) {
   await updateDoc(doc(db, "groups", id), { members: members });
-}
+} 
 
 // The driver starts the trip. members = the fees the driver typed.
 export async function startTrip(id, members) {

@@ -421,7 +421,7 @@ function penalty(modules, size) {
 
 // ---------- Put it all together ----------
 // Returns { size, modules } where modules[y][x] is true for a dark square.
-export function makeQr(text) {
+function makeQr(text) {
   const bytes = textToBytes(text);
   const levels = ["M", "L"];
   let version = 0;

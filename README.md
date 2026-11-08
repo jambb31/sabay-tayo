@@ -1,10 +1,10 @@
 # Sabay-Tayo setup notes
 
-## 1. Publish the website first (needed for QR codes and the app install)
+## 1. Publish the website first (needed for the QR codes)
 The QR codes must open on OTHER phones, so the site has to be online.
 1. Put the whole folder on https hosting. Free options: Firebase Hosting, GitHub Pages, Netlify.
 2. Open app.js and set SITE_URL to your address WITH a slash at the end, for example:
-       export const SITE_URL = "https://sabay-tayo.web.app/";
+       const SITE_URL = "https://sabay-tayo.web.app/";
 3. Re-upload. Then scan a QR code with a phone to test it.
 While you test on your own computer, leave SITE_URL as "" (a red "Testing mode" note shows under the QR).
 
@@ -28,8 +28,3 @@ Create the admin account (admin@sabaytayo.com) FIRST.
 - In the list of groups, tapping a card opens the same full view. The button on the card still
   joins (or accepts) right away.
 - Tap the QR on the passenger screen to make it bigger. Keep the phone brightness high.
-
-## 5. Install as an app (PWA)
-- Android / Chrome / Edge: tap "Install app" in the header.
-- iPhone (Safari): Share button, then "Add to Home Screen".
-- When you change any file, change CACHE = "sabay-tayo-v8" in sw.js to v9, v10, ... so phones update.
