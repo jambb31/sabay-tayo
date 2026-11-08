@@ -28,7 +28,7 @@ export const users = collection(db, "users");
 export { getDoc, collection, addDoc, doc, onSnapshot, updateDoc, query, orderBy, where, serverTimestamp };
 
 // ---------------------------------------------------------------------------
-// SETTINGS (Distance-based TSU Fare Matrix: PHP 40 Base + PHP 25/km)
+// SETTINGS (change the numbers here, every page uses them)
 // ---------------------------------------------------------------------------
 export const GATES = ["TSU Main Gate", "TSU San Isidro Gate", "TSU Lucinda Gate"];
 
@@ -44,7 +44,8 @@ const DESTINATIONS = [
 ];
 
 // FARE MATRIX: Fixed total fare per tricycle (up to 4 passengers) based on road distance.
-// Formula: PHP 40 base + (Distance in km * PHP 25/km), rounded to nearest PHP 20.
+// Starting point: PHP 40 base + (distance in km x PHP 25/km). Then each fare was set by hand to a
+// round PHP 20 step (some a step lower), so it is easy to collect. All numbers are placeholders.
 // Same-campus routes are omitted so students cannot book a ride to the gate they are already at.
 const FARE_MATRIX = {
   "TSU Main Gate": {

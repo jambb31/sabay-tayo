@@ -14,8 +14,10 @@ Rules Playground, then Publish. It keeps license photos private and lets only th
 Create the admin account (admin@sabaytayo.com) FIRST.
 
 ## 3. Numbers to confirm with your professor (all in app.js)
-- FARE_MATRIX    fixed TOTAL fare per tricycle for each gate + destination. Campus to campus is PHP 80
-                 (PHP 20 x 4 students). Farther places cost more. All numbers are placeholders.
+- FARE_MATRIX    fixed TOTAL fare per tricycle for each gate + destination, split by up to 4 students.
+                 Starting point is PHP 40 base + PHP 25 per km, then set by hand to round PHP 20 steps.
+                 Main Campus <-> San Isidro Campus is PHP 80 (PHP 20 per student). Farther places cost
+                 more (Lucinda is the farthest). All numbers are placeholders.
                  A route left out of the matrix (like Main Gate to Main Campus) is not offered.
 - DISCOUNTS      PWD rate only (20% is a placeholder). Only students ride, so no student or senior discount
 - FEE_PER_KM, MAX_LOAD_FEE, MAX_EXTRA_KM
