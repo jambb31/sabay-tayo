@@ -1,46 +1,83 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sign up or log in | Sabay-Tayo TSU Tricycle Fare Splitter</title>
-<meta name="description" content="Create a Sabay-Tayo account as a passenger or tricycle driver, or log in.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛺</text></svg>">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
-<link rel="stylesheet" href="style.css"></head><body>
-<header><div class="bar"><span class="logo"><span class="mark">S</span>Sabay-Tayo</span><div id="session" hidden><span id="who"></span><button class="btn light" id="logout" type="button">Sign out</button></div></div></header><main>
-<div class="authbox"><h1 id="title">Log in</h1><p class="small" id="sub">Welcome back to Sabay-Tayo.</p>
-<div class="seg"><button type="button" id="tabin" class="on">Log in</button><button type="button" id="tabup">Sign up</button></div>
-<form id="form" class="card" novalidate><fieldset class="plain"><legend class="sr">Account details</legend>
-<div id="upOnly" hidden><fieldset class="plain"><legend class="lbl">I am a</legend><div class="pills"><label><input type="radio" name="role" value="student" checked> Passenger</label><label><input type="radio" name="role" value="driver"> Tricycle driver</label></div></fieldset>
-<label for="fullname">Full name</label><input id="fullname" placeholder="Juan Luna Bernabe" autocomplete="name">
-<div id="plateBox" hidden><label for="plate">Tricycle plate or body number</label><input id="plate">
-<label for="lic">Photo of your driver's license</label><input id="lic" type="file" accept="image/*"></div></div>
-<label for="email">Email</label><input id="email" type="email" placeholder="name@email.com" autocomplete="email">
-<label for="pw">Password (8+ characters)</label><input id="pw" type="password" autocomplete="current-password">
-<p class="msg err" id="msg" role="alert"></p>
-<button class="btn" id="go" type="submit" style="width:100%;margin:0">Log in</button></fieldset></form></div>
-<script type="module">
-import {$,photoData,watchUser,signUp,logIn,STUDENT_DOMAIN,ADMIN_EMAIL,HOME} from "./app.js";
-watchUser().then(p=>{if(p)location.href=HOME[p.role]}); // already logged in: skip this page
-const E={"auth/email-already-in-use":"That email already has an account. Try logging in.","auth/invalid-credential":"Wrong email or password.","auth/operation-not-allowed":"Turn on Email/Password in Firebase Authentication.","auth/network-request-failed":"No internet connection."};
-let up=false;const role=()=>document.querySelector("[name=role]:checked").value;
-// Only passengers need a TSU student email, so only they get that hint.
-function ph(){$("email").placeholder=up&&role()==="student"?"name@student.tsu.edu.ph":"name@email.com"}
-function mode(u){up=u;$("upOnly").hidden=!u;$("title").textContent=$("go").textContent=u?"Sign up":"Log in";
- $("sub").textContent=u?"Create an account to start sharing rides.":"Welcome back to Sabay-Tayo.";
- ph();$("tabin").className=u?"":"on";$("tabup").className=u?"on":"";$("msg").textContent=""}
-$("tabin").onclick=()=>mode(false);$("tabup").onclick=()=>mode(true);
-document.querySelectorAll("[name=role]").forEach(r=>r.onchange=()=>{$("plateBox").hidden=role()!=="driver";ph()});
-$("form").onsubmit=async e=>{e.preventDefault();const msg=$("msg");msg.textContent="";const mail=$("email").value.trim().toLowerCase();
- if(!mail.includes("@"))return msg.textContent="Enter a valid email.";
- if($("pw").value.length<8)return msg.textContent="Password needs at least 8 characters.";
- try{
-  if(up){const name=$("fullname").value.trim();
-   if(!name)return msg.textContent="Enter your full name.";
-   if(role()==="driver"&&!$("plate").value.trim()&&mail!==ADMIN_EMAIL)return msg.textContent="Enter your tricycle plate or body number.";
-   if(role()==="driver"&&mail!==ADMIN_EMAIL&&!$("lic").files[0])return msg.textContent="Upload a photo of your driver's license.";
-   if(role()==="student"&&mail!==ADMIN_EMAIL&&!mail.endsWith(STUDENT_DOMAIN))return msg.textContent="Passengers must use an "+STUDENT_DOMAIN+" email.";
-   await signUp(name,mail,$("pw").value,role(),$("plate").value.trim(),$("lic").files[0]&&await photoData($("lic").files[0]))}
-  else await logIn(mail,$("pw").value);
-  const p=await watchUser();location.href=HOME[p.role];
- }catch(x){msg.textContent=E[x.code]||x.message}};
-</script>
-</main><footer><p>Sabay-Tayo for TSU students. Web Development final term project.</p></footer></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign up or log in | Sabay-Tayo TSU Tricycle Fare Splitter</title>
+  <meta name="theme-color" content="#0a2a66">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Sabay-Tayo">
+  <meta name="description" content="Create a Sabay-Tayo account as a passenger or tricycle driver, or log in.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛺</text></svg>">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <span class="logo"><span class="mark">S</span>Sabay-Tayo</span>
+      <div class="bar-right">
+        <button class="btn light" id="install" type="button" hidden>Install app</button>
+        <div id="session" hidden>
+          <span id="who"></span>
+          <button class="btn light" id="logout" type="button">Sign out</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="authbox">
+      <h1 id="title">Log in</h1>
+      <p class="small" id="sub">Welcome back to Sabay-Tayo.</p>
+
+      <div class="seg">
+        <button type="button" id="tabin" class="on">Log in</button>
+        <button type="button" id="tabup">Sign up</button>
+      </div>
+
+      <form id="form" class="card" novalidate>
+        <div id="upOnly" hidden>
+          <fieldset>
+            <legend>I am a</legend>
+            <div class="pills">
+              <label><input type="radio" name="role" value="student" checked> Passenger</label>
+              <label><input type="radio" name="role" value="driver"> Tricycle driver</label>
+            </div>
+          </fieldset>
+
+          <label for="fullname">Full name</label>
+          <input id="fullname" placeholder="Juan Luna Bernabe" autocomplete="name">
+
+          <div id="plateBox" hidden>
+            <label for="plate">Tricycle plate or body number</label>
+            <input id="plate">
+
+            <label for="lic">Photo of your driver's license</label>
+            <input id="lic" type="file" accept="image/*">
+          </div>
+        </div>
+
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="name@email.com" autocomplete="email">
+
+        <label for="pw">Password (8+ characters)</label>
+        <input id="pw" type="password" autocomplete="current-password">
+
+        <p class="msg err" id="msg" role="alert"></p>
+        <button class="btn full" id="go" type="submit">Log in</button>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <p>Sabay-Tayo for TSU students. Web Development final term project.</p>
+  </footer>
+
+  <script src="pwa.js" defer></script>
+  <script type="module" src="auth.js"></script>
+</body>
+</html>

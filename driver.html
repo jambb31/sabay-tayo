@@ -1,43 +1,46 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Driver dashboard | Sabay-Tayo TSU Tricycle Fare Splitter</title>
-<meta name="description" content="See full passenger groups near TSU gates, accept a ride, and mark it as picked up.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛺</text></svg>">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
-<link rel="stylesheet" href="style.css"></head><body>
-<header><div class="bar"><span class="logo"><span class="mark">S</span>Sabay-Tayo</span><div id="session" hidden><span id="who"></span><button class="btn light" id="logout" type="button">Sign out</button></div></div></header><main>
-<div id="lock" class="card" hidden></div>
-<div id="app" hidden><div id="list" aria-live="polite"></div></div>
-<script type="module">
-import {$,db,doc,groups,collection,onSnapshot,updateDoc,addDoc,query,orderBy,serverTimestamp,acceptGroup,watchUser,esc,money,time12,tag} from "./app.js";
-const me=await watchUser("driver");let data=[],ok=false;
-onSnapshot(doc(db,"users",me.uid),s=>{const v=s.data().verified;ok=v==="verified";$("app").hidden=!ok;$("lock").hidden=ok;
- $("lock").innerHTML=v==="rejected"?"<h2>Account not approved</h2><p>The admin could not verify your details. Contact the admin.</p>":"<h2>Waiting for admin verification</h2><p>The admin is checking your tricycle details. This page unlocks by itself once you are verified.</p>"});
-onSnapshot(query(groups,orderBy("createdAt","desc")),s=>{data=s.docs.map(d=>({id:d.id,...d.data()}));draw()},e=>$("list").textContent="Database error: "+e.message);
-setInterval(draw,1000);
-const avs=g=>[0,1,2,3].map(i=>g.members[i]?`<span class="av">${esc(g.members[i].name[0].toUpperCase())}</span>`:`<span class="av empty">+</span>`).join("");
-function draw(){if(!ok)return;const now=Date.now();
- const cur=data.find(g=>g.status==="accepted"&&g.driverEmail===me.email);
- const fin=data.find(g=>g.status==="done"&&g.driverEmail===me.email&&!localStorage.getItem("dseen_"+g.id));
- if(cur){const n=cur.members.length;
-  $("list").innerHTML=`<div class="card center"><div class="check">&#10003;</div><h1>Group accepted</h1><p class="small">Pick up your passengers at ${esc(cur.origin)}.</p>
-  <p><strong>${esc(cur.origin)} to ${esc(cur.destination)}</strong><br><span class="small">${esc(tag(cur))}</span></p>
-  <table><thead><tr><th>Passenger</th><th>Pays</th></tr></thead><tbody>${cur.members.map(m=>`<tr><td>${esc(m.name)}</td><td>${money(cur.fare/n)}</td></tr>`).join("")}</tbody></table>
-  <p><strong>Total fare ${money(cur.fare)}</strong></p><button class="btn green" data-act="done" data-id="${cur.id}">Mark as picked up</button></div>`;return}
- if(fin){$("list").innerHTML=`<div class="card center"><div class="check">&#10003;</div><h1>All set</h1><p>Passengers picked up. Safe trip!</p><p><strong>${esc(fin.origin)} to ${esc(fin.destination)}</strong><br><span class="small">${esc(tag(fin))}</span></p>
-  <button class="btn light line" data-act="report" data-id="${fin.id}">Report an issue</button><button class="btn" data-act="seen" data-id="${fin.id}">Back to groups</button></div>`;return}
- const rows=data.filter(g=>["open","full"].includes(g.status));
- $("list").innerHTML="<h1>Groups ready for pickup</h1>"+(rows.length?`<div class="grid">`+rows.map(g=>{const n=g.members.length,can=g.status==="full"||g.departAt<=now;
-  return `<article class="card ${can?"ready":"waiting"}"><div class="row"><strong>${esc(g.destination)}</strong><span class="badge ${can?"ready":"urgent"}">${can?"Ready":"Waiting"}</span></div>
-  <p class="small">Group ${esc(tag(g))}, fare ${money(g.fare)} total<br>From ${esc(g.origin)}, leaves ${time12(g.depart)}</p>
-  <div class="row"><span>${avs(g)}</span><span class="small">${n}/4 ${can?"ready":"waiting"}</span></div>
-  ${can?`<p class="small">Each pays ${money(g.fare/n)}.</p><button class="btn" style="width:100%;margin:0" data-act="accept" data-id="${g.id}">Accept group</button>`:`<p class="small">Not ready yet. Still filling up until ${time12(g.depart)}.</p>`}</article>`}).join("")+"</div>":'<div class="card"><p>No groups yet. New ones show up here by themselves.</p></div>')}
-document.body.onclick=async e=>{const b=e.target.closest("[data-act]");if(!b)return;const {id,act}=b.dataset;
- try{
-  if(act==="accept")await acceptGroup(id,me);
-  else if(act==="done")await updateDoc(doc(db,"groups",id),{status:"done"});
-  else if(act==="seen"){localStorage.setItem("dseen_"+id,"1");draw()}
-  else if(act==="report"){const t=prompt("What happened?");if(t){await addDoc(collection(db,"reports"),{groupId:id,by:me.email,text:t,createdAt:serverTimestamp()});alert("Report sent.")}}
- }catch(x){alert(x.message)}};
-</script>
-</main><footer><p>Sabay-Tayo for TSU students. Web Development final term project.</p></footer></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Driver dashboard | Sabay-Tayo TSU Tricycle Fare Splitter</title>
+  <meta name="theme-color" content="#0a2a66">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Sabay-Tayo">
+  <meta name="description" content="See full passenger groups near TSU gates, accept a ride, add fees, and finish the trip.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛺</text></svg>">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <span class="logo"><span class="mark">S</span>Sabay-Tayo</span>
+      <div class="bar-right">
+        <button class="btn light" id="install" type="button" hidden>Install app</button>
+        <div id="session" hidden>
+          <span id="who"></span>
+          <button class="btn light" id="logout" type="button">Sign out</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="lock" class="card" hidden></div>
+    <div id="app" hidden>
+      <div id="list" aria-live="polite"></div>
+    </div>
+  </main>
+
+  <footer>
+    <p>Sabay-Tayo for TSU students. Web Development final term project.</p>
+  </footer>
+
+  <script src="pwa.js" defer></script>
+  <script type="module" src="driver.js"></script>
+</body>
+</html>

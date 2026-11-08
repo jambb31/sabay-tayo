@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a2a66">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Sabay-Tayo">
+  <meta name="description" content="Follow a Sabay-Tayo tricycle ride shared by a friend or family member.">
+  <title>Track a ride | Sabay-Tayo TSU Tricycle Fare Splitter</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛺</text></svg>">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <span class="logo"><span class="mark">S</span>Sabay-Tayo</span>
+      <div class="bar-right">
+        <button class="btn light" id="install" type="button" hidden>Install app</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <h1>Ride tracker</h1>
+    <div id="trackbox" class="card center" aria-live="polite">
+      <p>Loading the ride...</p>
+    </div>
+  </main>
+
+  <footer>
+    <p>Sabay-Tayo for TSU students. Web Development final term project.</p>
+  </footer>
+
+  <script src="pwa.js" defer></script>
+  <script type="module" src="track.js"></script>
+</body>
+</html>

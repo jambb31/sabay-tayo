@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a2a66">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Sabay-Tayo">
+  <meta name="description" content="You are offline.">
+  <title>Offline | Sabay-Tayo TSU Tricycle Fare Splitter</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛺</text></svg>">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <span class="logo"><span class="mark">S</span>Sabay-Tayo</span>
+      <div class="bar-right">
+        <button class="btn light" id="install" type="button" hidden>Install app</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="card center">
+      <h1>You are offline</h1>
+      <p>Sabay-Tayo needs the internet to show live groups and rides. Check your connection, then try again.</p>
+      <button class="btn" type="button" onclick="location.reload()">Try again</button>
+    </div>
+  </main>
+
+  <footer>
+    <p>Sabay-Tayo for TSU students. Web Development final term project.</p>
+  </footer>
+
+  <script src="pwa.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+// Suggested Firestore rules for Sabay-Tayo.
+// Firebase console -> Firestore Database -> Rules -> paste this -> test it in the "Rules Playground" -> Publish.
+// Create the admin account (admin@sabaytayo.com) FIRST, before you publish the website.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.email == 'admin@sabaytayo.com';
+    }
+
+    // Accounts: you can read your own, the admin can read everyone's.
+    // A driver always starts as "pending", and only the admin can change that.
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if signedIn() && request.auth.uid == uid && (
+        (request.resource.data.role == 'student' && !('verified' in request.resource.data)) ||
+        (request.resource.data.role == 'driver' && request.resource.data.verified == 'pending') ||
+        (isAdmin() && request.resource.data.role == 'admin')
+      );
+      allow update: if isAdmin();
+    }
+
+    // License photos: only the driver who uploaded it and the admin can see it.
+    match /licenses/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow create, update: if signedIn() && request.auth.uid == uid;
+    }
+
+    // Ride groups: any signed-in user (students join, drivers accept).
+    // This is the loose part. Tighten it later if you have time.
+    match /groups/{id} {
+      allow read, create, update, delete: if signedIn();
+    }
+
+    // Public tracking pages: anyone with the link can read. It has no emails in it.
+    match /tracks/{id} {
+      allow read: if true;
+      allow create, update: if signedIn();
+    }
+
+    // Issue reports: signed-in users can send, only the admin can read.
+    match /reports/{id} {
+      allow create: if signedIn();
+      allow read: if isAdmin();
+    }
+  }
+}

@@ -1,15 +1,63 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Welcome | Sabay-Tayo TSU Tricycle Fare Splitter</title>
-<meta name="description" content="Split tricycle fares with other TSU students. Join or create a ride group.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛺</text></svg>">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
-<link rel="stylesheet" href="style.css"></head><body>
-<header><div class="bar"><span class="logo"><span class="mark">S</span>Sabay-Tayo</span><div id="session" hidden><span id="who"></span><button class="btn light" id="logout" type="button">Sign out</button></div></div></header><main>
-<section class="hero2"><h1>Ride together. Split the fare.</h1>
-<p>Sabay-Tayo lets TSU students share one tricycle and split the fare equally, with no haggling at the terminal.</p>
-<a class="btn enter" href="auth.html">Enter</a></section>
-<section class="steps2"><div class="card"><h3>Create or join</h3><p>Pick your gate, destination, and departure time.</p></div>
-<div class="card"><h3>Wait for others</h3><p>Up to 4 passengers fit in one tricycle.</p></div>
-<div class="card"><h3>Ride and split</h3><p>A driver accepts and the fare is split for you.</p></div></section>
-</main><footer><p>Sabay-Tayo for TSU students. Web Development final term project.</p></footer></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Welcome | Sabay-Tayo TSU Tricycle Fare Splitter</title>
+  <meta name="theme-color" content="#0a2a66">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Sabay-Tayo">
+  <meta name="description" content="Split tricycle fares with other TSU students. Join or create a ride group.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛺</text></svg>">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <span class="logo"><span class="mark">S</span>Sabay-Tayo</span>
+      <div class="bar-right">
+        <button class="btn light" id="install" type="button" hidden>Install app</button>
+        <div id="session" hidden>
+          <span id="who"></span>
+          <button class="btn light" id="logout" type="button">Sign out</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero2">
+      <h1>Ride together. Split the fare.</h1>
+      <p>Sabay-Tayo lets TSU students share one tricycle and split the fare equally, with no haggling at the terminal.</p>
+      <a class="btn enter" href="auth.html">Enter</a>
+    </section>
+
+    <section class="steps">
+      <div class="card">
+        <div class="step">1</div>
+        <h3>Create or join</h3>
+        <p>Pick your gate, destination, and departure time.</p>
+      </div>
+      <div class="card">
+        <div class="step">2</div>
+        <h3>Wait for others</h3>
+        <p>Up to 4 passengers fit in one tricycle.</p>
+      </div>
+      <div class="card">
+        <div class="step">3</div>
+        <h3>Ride and split</h3>
+        <p>The fare comes from the fare matrix. Heavy load or a longer trip adds a small extra fee.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Sabay-Tayo for TSU students. Web Development final term project.</p>
+  </footer>
+  <script src="pwa.js" defer></script>
+</body>
+</html>

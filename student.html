@@ -1,68 +1,105 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Passenger groups | Sabay-Tayo TSU Tricycle Fare Splitter</title>
-<meta name="description" content="Browse ride groups at TSU gates, create your own with a departure time, and split the fare.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛺</text></svg>">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
-<link rel="stylesheet" href="style.css"></head><body>
-<header><div class="bar"><span class="logo"><span class="mark">S</span>Sabay-Tayo</span><div id="session" hidden><span id="who"></span><button class="btn light" id="logout" type="button">Sign out</button></div></div></header><main>
-<div id="mine" hidden></div>
-<div id="browse" hidden><h1>Groups at TSU gates</h1><div class="grid" id="list" aria-live="polite"></div>
-<p style="margin-top:20px"><button class="btn" id="open" type="button">+ Create a group</button></p></div>
-<div id="formv" hidden><h1>New group</h1>
-<form id="form" class="card"><label for="gate">From</label><select id="gate"></select>
-<label for="dest">To</label><select id="dest"></select>
-<label for="time">Departure time</label><input id="time" type="time" required>
-<p class="small" style="margin-top:12px">Members <span class="av" id="me"></span><span class="av empty">+</span><span class="av empty">+</span><span class="av empty">+</span> 1/4</p>
-<p class="msg" id="hint"></p><p class="msg err" id="msg" role="alert"></p>
-<button class="btn" type="submit">Create a group</button><button class="btn light line" id="cancelform" type="button">Cancel</button></form></div>
-<script type="module">
-import {$,db,doc,groups,collection,onSnapshot,query,orderBy,addDoc,updateDoc,serverTimestamp,FARES,CODES,GATES,joinGroup,leaveGroup,watchUser,esc,money,time12,tag} from "./app.js";
-const user=await watchUser("student");let data=[],creating=false;
-$("gate").innerHTML=GATES.map(g=>`<option>${g}</option>`).join("");
-$("dest").innerHTML=Object.keys(FARES).map(k=>`<option>${k}</option>`).join("");
-$("me").textContent=user.name[0].toUpperCase();
-const hint=()=>$("hint").textContent=`Total fare ${money(FARES[$("dest").value])}, split equally by everyone who joins.`;
-$("dest").onchange=hint;hint();
-const avs=g=>[0,1,2,3].map(i=>g.members[i]?`<span class="av">${esc(g.members[i].name[0].toUpperCase())}</span>`:`<span class="av empty">+</span>`).join("");
-const fares=g=>`<table><thead><tr><th>Passenger</th><th>Pays</th></tr></thead><tbody>${g.members.map(m=>`<tr><td>${esc(m.name)}</td><td>${money(g.fare/g.members.length)}</td></tr>`).join("")}</tbody></table><p class="small">Total fare ${money(g.fare)}, split ${g.members.length} way${g.members.length>1?"s":""}.</p>`;
-const qr=g=>`<img class="qr" width="170" height="170" alt="QR code for group ${esc(g.code)}" src="https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=${encodeURIComponent(g.id)}">`;
-const btns=g=>`<button class="btn light line" data-act="report" data-id="${g.id}">Report an issue</button>`;
-onSnapshot(query(groups,orderBy("createdAt","desc")),s=>{data=s.docs.map(d=>({id:d.id,...d.data()}));draw()},e=>$("list").textContent="Database error: "+e.message);
-setInterval(draw,1000);
-function mineHTML(g,now){const n=g.members.length,route=`${esc(g.origin)} to ${esc(g.destination)}`,info=`<p><strong>${route}</strong><br><span class="small">${time12(g.depart)} &bull; ${esc(tag(g))}</span></p>`;
- if(g.status==="done")return `<div class="card center"><div class="check">&#10003;</div><h1>All set</h1><p>Trip finished. Thanks for riding with Sabay-Tayo.</p>${info}${btns(g)}<button class="btn" data-act="seen" data-id="${g.id}">Back to groups</button></div>`;
- if(g.status==="accepted")return `<div class="card center"><div class="check">&#10003;</div><h1>All set</h1><p>You're all set for your ride. Please be at the pickup point on time.</p>
-  <div class="banner">Driver ${esc(g.driverName)}, plate ${esc(g.driverPlate)}</div>${info}${fares(g)}${btns(g)}</div>`;
- if(g.status==="full")return `<div class="card"><h1>Group full</h1>${qr(g)}<p class="small center">Show this QR code to the driver at the terminal.</p><div class="banner red">Group full. Head to the terminal.</div>${info}<h3>Fare breakdown</h3>${fares(g)}</div>`;
- const late=g.departAt<=now;
- return `<div class="card center"><h1>Waiting for members</h1><p class="small">Group code #${esc(g.code)}</p>${qr(g)}<p><strong>${n}/4 members joined</strong> (updates live)</p><p>${avs(g)}</p>${info}
-  <p class="msg">${late?"Departure time reached. A driver can accept your group now.":"Leaves at "+time12(g.depart)+"."}</p>
-  <button class="btn red" data-act="cancel" data-id="${g.id}">${g.creatorEmail===user.email?"Cancel group":"Leave group"}</button></div>`}
-function draw(){const now=Date.now();
- const mine=data.find(g=>g.members.some(m=>m.email===user.email)&&(["open","full","accepted"].includes(g.status)||(g.status==="done"&&!localStorage.getItem("seen_"+g.id))));
- $("mine").hidden=!mine;$("browse").hidden=!!mine||creating;$("formv").hidden=!!mine||!creating;
- if(mine){$("mine").innerHTML=mineHTML(mine,now);return}
- const rows=data.filter(g=>g.status==="open"&&g.departAt>now);
- $("list").innerHTML=rows.length?rows.map(g=>{const n=g.members.length,hot=n>=3;
-  return `<article class="card ${hot?"waiting":"ready"}"><div class="row"><strong>${esc(g.destination)}</strong><span class="badge ${hot?"urgent":""}">${hot?"Urgent":"Joinable"}</span></div>
-  <p class="small">Group ${esc(tag(g))}<br>From ${esc(g.origin)}, leaves ${time12(g.depart)}</p><div class="row"><span>${avs(g)}</span><span class="small">${n}/4 members</span></div>
-  <button class="btn" style="width:100%;margin:6px 0 0" data-act="join" data-id="${g.id}">Join group</button></article>`}).join(""):'<div class="card" style="grid-column:1/-1"><p>No groups available right now.</p></div>'}
-document.body.onclick=async e=>{const b=e.target.closest("[data-act]");if(!b)return;const {id,act}=b.dataset;
- try{
-  if(act==="join")await joinGroup(id,user);
-  else if(act==="cancel"){const g=data.find(x=>x.id===id);if(g.creatorEmail===user.email)await updateDoc(doc(db,"groups",id),{status:"cancelled"});else await leaveGroup(id,user)}
-  else if(act==="seen"){localStorage.setItem("seen_"+id,"1");draw()}
-  else if(act==="report"){const t=prompt("What happened?");if(t){await addDoc(collection(db,"reports"),{groupId:id,by:user.email,text:t,createdAt:serverTimestamp()});alert("Report sent.")}}
- }catch(x){alert(x.message)}};
-$("open").onclick=()=>{creating=true;$("time").value=new Date(Date.now()+30*60000).toTimeString().slice(0,5);draw()};
-$("cancelform").onclick=()=>{creating=false;draw()};
-$("form").onsubmit=async e=>{e.preventDefault();const dest=$("dest").value,t=$("time").value,msg=$("msg");
- if(!t)return msg.textContent="Pick a departure time.";
- const at=new Date();at.setHours(+t.split(":")[0],+t.split(":")[1],0,0);
- if(at.getTime()<=Date.now())return msg.textContent="Pick a time later than now.";
- msg.textContent="";
- await addDoc(groups,{origin:$("gate").value,destination:dest,fare:FARES[dest],code:"A"+(1+Math.floor(Math.random()*99))+"-"+CODES[dest],depart:t,departAt:at.getTime(),creatorEmail:user.email,members:[{name:user.name,email:user.email}],status:"open",createdAt:serverTimestamp()});
- creating=false;draw()};
-</script>
-</main><footer><p>Sabay-Tayo for TSU students. Web Development final term project.</p></footer></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Passenger groups | Sabay-Tayo TSU Tricycle Fare Splitter</title>
+  <meta name="theme-color" content="#0a2a66">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Sabay-Tayo">
+  <meta name="description" content="Browse ride groups at TSU gates, create your own with a departure time, and split the fare.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛺</text></svg>">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <span class="logo"><span class="mark">S</span>Sabay-Tayo</span>
+      <div class="bar-right">
+        <button class="btn light" id="install" type="button" hidden>Install app</button>
+        <div id="session" hidden>
+          <span id="who"></span>
+          <button class="btn light" id="logout" type="button">Sign out</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="mine" hidden></div>
+
+    <div id="browse" hidden>
+      <h1>Groups at TSU gates</h1>
+      <div class="grid" id="list" aria-live="polite"></div>
+      <p>
+        <button class="btn" id="open" type="button">+ Create a group</button>
+      </p>
+
+      <h2>Fares</h2>
+      <div id="fares" class="card"></div>
+
+      <h2>Fare splitter</h2>
+      <div id="splitter" class="card">
+        <p class="small">Try a ride before you join. Add each passenger's discount and load, and see who pays what.</p>
+
+        <label for="sgate">From</label>
+        <select id="sgate"></select>
+
+        <label for="sdest">To</label>
+        <select id="sdest"></select>
+
+        <label for="scount">Passengers</label>
+        <select id="scount">
+          <option>1</option>
+          <option>2</option>
+          <option selected>3</option>
+          <option>4</option>
+        </select>
+
+        <div id="srows"></div>
+        <div id="sresult"></div>
+      </div>
+    </div>
+
+    <div id="formv" hidden>
+      <h1>New group</h1>
+      <form id="form" class="card">
+        <label for="gate">From</label>
+        <select id="gate"></select>
+
+        <label for="dest">To</label>
+        <select id="dest"></select>
+
+        <label for="time">Departure time</label>
+        <input id="time" type="time" required>
+
+        <p class="small">
+          Members
+          <span class="av" id="me"></span>
+          <span class="av empty">+</span>
+          <span class="av empty">+</span>
+          <span class="av empty">+</span>
+          1/4
+        </p>
+        <p class="msg" id="hint"></p>
+        <p class="small" id="rates"></p>
+        <p class="msg err" id="msg" role="alert"></p>
+
+        <button class="btn" type="submit">Create a group</button>
+        <button class="btn light line" id="cancelform" type="button">Cancel</button>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <p>Sabay-Tayo for TSU students. Web Development final term project.</p>
+  </footer>
+
+  <script src="pwa.js" defer></script>
+  <script type="module" src="student.js"></script>
+</body>
+</html>
