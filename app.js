@@ -40,7 +40,7 @@ const DESTINATIONS = [
   "Siesta Bus Stop",
   "SM City Tarlac",
   "My MetroTown Mall",
-  "Palm Plaza Maliwalo"
+  "Palm Plaza Matatalaib"
 ];
 
 // FARE MATRIX: Fixed total fare per tricycle (up to 4 passengers) based on road distance.
@@ -53,7 +53,7 @@ const FARE_MATRIX = {
     "SM City Tarlac": 80,         // ~1.8 km -> PHP 20 / student
     "My MetroTown Mall": 80,      // ~2.0 km -> PHP 20 / student
     "TSU San Isidro Campus": 80,  // ~2.3 km -> PHP 20 / student
-    "Palm Plaza Maliwalo": 100,   // ~2.8 km -> PHP 25 / student
+    "Palm Plaza Matatalaib": 100,   // ~2.8 km -> PHP 25 / student
     "TSU Lucinda Campus": 160     // ~4.8 km -> PHP 40 / student
   },
   "TSU San Isidro Gate": {
@@ -62,11 +62,11 @@ const FARE_MATRIX = {
     "Siesta Bus Stop": 80,        // ~2.5 km -> PHP 20 / student
     "Magic Star": 100,            // ~2.8 km -> PHP 25 / student
     "SM City Tarlac": 120,        // ~3.5 km -> PHP 30 / student
-    "Palm Plaza Maliwalo": 140,   // ~4.6 km -> PHP 35 / student
+    "Palm Plaza Matatalaib": 140,   // ~4.6 km -> PHP 35 / student
     "TSU Lucinda Campus": 200     // ~6.8 km -> PHP 50 / student (cross-city)
   },
   "TSU Lucinda Gate": {
-    "Palm Plaza Maliwalo": 80,    // ~2.2 km -> PHP 20 / student
+    "Palm Plaza Matatalaib": 80,    // ~2.2 km -> PHP 20 / student
     "Magic Star": 120,            // ~3.8 km -> PHP 30 / student
     "Siesta Bus Stop": 120,       // ~4.0 km -> PHP 30 / student
     "My MetroTown Mall": 140,     // ~4.2 km -> PHP 35 / student
@@ -84,7 +84,7 @@ export const CODES = {
   "Siesta Bus Stop": "SIESTA",
   "SM City Tarlac": "SMCT",
   "My MetroTown Mall": "METRO",
-  "Palm Plaza Maliwalo": "PALM"
+  "Palm Plaza Matatalaib": "PALM"
 }; // short group-code names
 
 // PWD DISCOUNT: it takes off a percent of that passenger's share of the fare.
