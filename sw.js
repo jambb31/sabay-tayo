@@ -1,6 +1,6 @@
 // Service worker: lets the site install as an app and open the pages again when the signal is bad.
 // Live data (Firebase) is never cached here. Only the website files are.
-const CACHE = "sabay-tayo-v6";
+const CACHE = "sabay-tayo-v7";
 const FILES = [
   "./", "index.html", "auth.html", "student.html", "driver.html", "admin.html", "offline.html",
   "style.css", "app.js", "auth.js", "student.js", "driver.js", "admin.js", "pwa.js",

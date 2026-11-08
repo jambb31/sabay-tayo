@@ -4,7 +4,7 @@ import {
   db, groups, collection, onSnapshot, query, orderBy, addDoc, serverTimestamp,
   GATES, CODES, MAX_LOAD_FEE,
   getFare, destinationsFor, joinGroup, leaveGroup, voteGo, cancelGroup, updateMember,
-  scanLink, watchUser, qrHTML,
+  scanLink, watchUser, qrHTML, getParam, roomDetailHTML,
   esc, money, time12, tag, findMember, newMember, inTrip, DISCOUNTS, showFinished, markSeen,
   fareTable, fareBreakdownHTML, fareMatrixHTML, ratesHTML, trackerHTML
 } from "./app.js";
@@ -13,8 +13,11 @@ const user = await watchUser("student");
 let data = [];
 let creating = false;
 let qrBig = false; // is the QR code shown large?
+let viewId = getParam("group"); // the room opened from the list or from a scanned QR code
+let loaded = false;             // have the groups arrived from Firebase yet?
 
 const mineBox = document.getElementById("mine");
+const roomBox = document.getElementById("room");
 const browseBox = document.getElementById("browse");
 const formBox = document.getElementById("formv");
 const listBox = document.getElementById("list");
@@ -147,6 +150,7 @@ onSnapshot(
       g.id = d.id;
       data.push(g);
     });
+    loaded = true;
     draw();
   },
   function (error) {
@@ -275,13 +279,68 @@ function groupCard(g) {
     badgeClass = "urgent";
     badgeText = "Urgent";
   }
-  return '<article class="card ' + cardClass + '">' +
+  return '<article class="card clickable ' + cardClass + '" data-act="open" data-id="' + g.id + '" tabindex="0">' +
     '<div class="row"><strong>' + esc(g.destination) + '</strong><span class="badge ' + badgeClass + '">' + badgeText + "</span></div>" +
     '<p class="small">Group ' + esc(tag(g)) + "<br>From " + esc(g.origin) + ", leaves " + time12(g.depart) + "</p>" +
     '<div class="row"><span>' + avatars(g) + '</span><span class="small">' + n + "/4 members</span></div>" +
     '<p class="small">' + money(g.fare / (n + 1)) + " each if you join</p>" +
     '<button class="btn full" data-act="join" data-id="' + g.id + '">Join group</button>' +
     "</article>";
+}
+
+// ---------- The full view of one room (before joining) ----------
+function openRoom(id) {
+  viewId = id;
+  draw();
+  window.scrollTo(0, 0);
+}
+
+function closeRoom() {
+  viewId = null;
+  history.replaceState(null, "", location.pathname); // remove ?group=... so a refresh does not open it again
+}
+
+// Why this room cannot be joined (empty text = it can be joined).
+function cannotJoin(g) {
+  if (g.status === "open" && g.departAt <= Date.now()) {
+    return "The departure time of this group has passed.";
+  }
+  if (g.status === "full") {
+    return "This group is full.";
+  }
+  if (g.status === "ready") {
+    return "Everyone in this group already agreed to leave.";
+  }
+  if (inTrip(g)) {
+    return "A driver already accepted this group.";
+  }
+  if (g.status === "done") {
+    return "This trip is finished.";
+  }
+  if (g.status === "cancelled") {
+    return "This group was cancelled.";
+  }
+  return "";
+}
+
+function roomHTML(g) {
+  if (!loaded) {
+    return '<div class="card center"><p>Loading the room...</p></div>';
+  }
+  if (!g) {
+    return '<div class="card center"><h2>Room not found</h2><p>This group may have been cancelled.</p>' +
+      '<button class="btn" data-act="back">Back to groups</button></div>';
+  }
+  let action = '<button class="btn full" data-act="join" data-id="' + g.id + '">Join group</button>';
+  const reason = cannotJoin(g);
+  if (reason !== "") {
+    action = '<p class="msg">' + reason + "</p>";
+  }
+  return '<div class="card">' +
+    roomDetailHTML(g) +
+    action +
+    '<button class="btn light line full" data-act="back">Back to groups</button>' +
+    "</div>";
 }
 
 // ---------- Decide what to show ----------
@@ -303,13 +362,22 @@ function findMine() {
 function draw() {
   const now = Date.now();
   const mine = findMine();
+  if (mine && viewId !== null) {
+    closeRoom(); // I joined the room, so the full view is not needed any more
+  }
+  const viewing = !mine && !creating && viewId !== null;
 
   mineBox.hidden = !mine;
-  browseBox.hidden = mine !== null || creating;
+  roomBox.hidden = !viewing;
+  browseBox.hidden = mine !== null || creating || viewing;
   formBox.hidden = mine !== null || !creating;
 
   if (mine) {
     show(mineBox, mineHTML(mine));
+    return;
+  }
+  if (viewing) {
+    show(roomBox, roomHTML(findGroup(viewId)));
     return;
   }
 
@@ -346,7 +414,12 @@ document.body.addEventListener("click", async function (e) {
   const id = target.dataset.id;
 
   try {
-    if (act === "join") {
+    if (act === "open") {
+      openRoom(id);
+    } else if (act === "back") {
+      closeRoom();
+      draw();
+    } else if (act === "join") {
       await joinGroup(id, user);
     } else if (act === "vote") {
       await voteGo(id, user, true);
@@ -378,6 +451,13 @@ document.body.addEventListener("click", async function (e) {
     }
   } catch (error) {
     alert(error.message);
+  }
+});
+
+// Enter on a focused group card opens it too (for keyboard users).
+document.body.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && e.target.dataset && e.target.dataset.act === "open") {
+    openRoom(e.target.dataset.id);
   }
 });
 

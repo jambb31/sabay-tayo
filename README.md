@@ -22,11 +22,14 @@ Create the admin account (admin@sabaytayo.com) FIRST.
 
 ## 4. How the QR code works
 - qr.js makes the QR code inside the browser. No internet and no outside website are needed.
-- The passenger's QR holds a link like  .../driver.html?group=ID.  The driver scans it with the
-  normal phone camera, logs in if asked, and sees the group with an Accept button.
+- The passenger's QR holds a link like  .../student.html?group=ID.  Whoever scans it with the normal
+  phone camera logs in if asked, and the room opens with its full details. A passenger sees a Join
+  group button. A driver is sent on to driver.html with the same room and sees an Accept group button.
+- In the list of groups, tapping a card opens the same full view. The button on the card still
+  joins (or accepts) right away.
 - Tap the QR on the passenger screen to make it bigger. Keep the phone brightness high.
 
 ## 5. Install as an app (PWA)
 - Android / Chrome / Edge: tap "Install app" in the header.
 - iPhone (Safari): Share button, then "Add to Home Screen".
-- When you change any file, change CACHE = "sabay-tayo-v6" in sw.js to v7, v8, ... so phones update.
+- When you change any file, change CACHE = "sabay-tayo-v7" in sw.js to v8, v9, ... so phones update.

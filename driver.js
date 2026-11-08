@@ -3,13 +3,15 @@ import {
   db, doc, groups, collection, onSnapshot, addDoc, query, orderBy, serverTimestamp,
   acceptGroup, saveFees, startTrip, finishTrip, watchUser, getParam,
   FEE_PER_KM, MAX_LOAD_FEE, MAX_EXTRA_KM,
-  esc, money, time12, tag, shareOf, totalOf, inTrip, discountOptions, showFinished, markSeen,
+  esc, money, time12, tag, shareOf, totalOf, inTrip, discountOptions, showFinished, markSeen, roomDetailHTML,
   fareTable, fareMatrixHTML, ratesHTML, trackerHTML
 } from "./app.js";
 
 const me = await watchUser("driver");
 let data = [];
 let verified = false;
+let viewId = getParam("group"); // the room opened from the list or from a scanned QR code
+let loaded = false;             // have the groups arrived from Firebase yet?
 
 const appBox = document.getElementById("app");
 const lockBox = document.getElementById("lock");
@@ -38,6 +40,7 @@ onSnapshot(
       g.id = d.id;
       data.push(g);
     });
+    loaded = true;
     draw();
   },
   function (error) {
@@ -129,44 +132,46 @@ function readFees(g) {
   return members;
 }
 
-// ---------- Scanned QR card ----------
-function scanCard(g) {
+// ---------- Full view of one room (opened from the list or from a scanned QR code) ----------
+function openRoom(id) {
+  viewId = id;
+  draw();
+  window.scrollTo(0, 0);
+}
+
+function closeRoom() {
+  viewId = null;
+  history.replaceState(null, "", location.pathname); // remove ?group=... so a refresh does not open it again
+}
+
+function roomCard(g) {
+  if (!loaded) {
+    return '<div class="card center"><p>Loading the room...</p></div>';
+  }
   if (!g) {
-    return '<div class="card"><h2>Scanned group</h2><p>Group not found. It may have been cancelled.</p>' +
-      '<a class="btn light line" href="driver.html">Close</a></div>';
+    return '<div class="card center"><h2>Room not found</h2><p>This group may have been cancelled.</p>' +
+      '<button class="btn" data-act="back">Back to groups</button></div>';
   }
 
-  const can = g.status === "full" || g.status === "ready";
-  let msg = "";
+  let action = '<button class="btn full" data-act="accept" data-id="' + g.id + '">Accept group</button>';
+  let reason = "";
   if (inTrip(g)) {
-    msg = "Already accepted by " + esc(g.driverName) + ".";
+    reason = "Already accepted by " + esc(g.driverName) + ".";
   } else if (g.status === "done") {
-    msg = "This trip is finished.";
+    reason = "This trip is finished.";
   } else if (g.status === "cancelled") {
-    msg = "This group was cancelled.";
-  } else if (!can) {
-    msg = "Not ready yet. Passengers are still joining or have not agreed to leave.";
+    reason = "This group was cancelled.";
+  } else if (g.status !== "full" && g.status !== "ready") {
+    reason = "Not ready yet. Passengers are still joining or have not agreed to leave.";
+  }
+  if (reason !== "") {
+    action = '<p class="msg">' + reason + "</p>";
   }
 
-  let cardClass = "waiting";
-  let badgeClass = "urgent";
-  if (can) {
-    cardClass = "ready";
-    badgeClass = "ready";
-  }
-  let action = '<button class="btn" data-act="accept" data-id="' + g.id + '">Accept group</button>';
-  if (msg !== "") {
-    action = '<p class="msg">' + msg + "</p>";
-  }
-
-  return '<div class="card ' + cardClass + '">' +
-    '<span class="badge ' + badgeClass + '">Scanned QR</span>' +
-    "<h2>" + esc(g.origin) + " to " + esc(g.destination) + "</h2>" +
-    '<p class="small">' + esc(tag(g)) + "</p>" +
-    fareTable(g, false) +
-    "<p>Total " + money(g.fare) + ".</p>" +
+  return '<div class="card">' +
+    roomDetailHTML(g) +
     action +
-    '<a class="btn light line" href="driver.html">Close</a>' +
+    '<button class="btn light line full" data-act="back">Back to groups</button>' +
     "</div>";
 }
 
@@ -185,7 +190,7 @@ function groupCard(g) {
     bottom = '<p class="small">Each pays ' + money(g.fare / n) + ".</p>" +
       '<button class="btn full" data-act="accept" data-id="' + g.id + '">Accept group</button>';
   }
-  return '<article class="card ' + cardClass + '">' +
+  return '<article class="card clickable ' + cardClass + '" data-act="open" data-id="' + g.id + '" tabindex="0">' +
     '<div class="row"><strong>' + esc(g.destination) + '</strong><span class="badge ' + badgeClass + '">' + word + "</span></div>" +
     '<p class="small">Group ' + esc(tag(g)) + ", fare " + money(g.fare) + " total<br>From " + esc(g.origin) + ", leaves " + time12(g.depart) + "</p>" +
     '<div class="row"><span>' + avatars(g) + '</span><span class="small">' + n + "/4 " + word.toLowerCase() + "</span></div>" +
@@ -246,13 +251,14 @@ function view() {
       "</div>";
   }
 
-  // 3. The list of groups (and the scanned group, if the driver opened a QR code)
-  let html = "";
-  const scanId = getParam("group");
-  if (scanId) {
-    html += scanCard(findGroup(scanId));
+  // 3. A room opened from the list or from a scanned QR code: show its full details
+  if (viewId !== null) {
+    return roomCard(findGroup(viewId));
   }
-  html += "<h1>Groups ready for pickup</h1>";
+
+  // 4. The list of groups
+  let html = "<h1>Groups ready for pickup</h1>";
+  html += '<p class="small">Tap a group to see its full details before you accept.</p>';
 
   let cards = "";
   for (let i = 0; i < data.length; i++) {
@@ -279,16 +285,34 @@ function draw() {
 }
 
 // ---------- Buttons ----------
+// A click can land on a child of a group card, so walk up until we find the element with data-act.
+function findActionElement(el) {
+  while (el && el !== document.body) {
+    if (el.dataset && el.dataset.act) {
+      return el;
+    }
+    el = el.parentNode;
+  }
+  return null;
+}
+
 document.body.addEventListener("click", async function (e) {
-  const act = e.target.dataset.act;
-  const id = e.target.dataset.id;
-  if (!act) {
+  const target = findActionElement(e.target);
+  if (!target) {
     return;
   }
+  const act = target.dataset.act;
+  const id = target.dataset.id;
 
   try {
-    if (act === "accept") {
+    if (act === "open") {
+      openRoom(id);
+    } else if (act === "back") {
+      closeRoom();
+      draw();
+    } else if (act === "accept") {
       await acceptGroup(id, me);
+      closeRoom();
     } else if (act === "save") {
       const members = readFees(findGroup(id));
       if (members) {
@@ -322,5 +346,12 @@ document.body.addEventListener("click", async function (e) {
     }
   } catch (error) {
     alert(error.message);
+  }
+});
+
+// Enter on a focused group card opens it too (for keyboard users).
+document.body.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && e.target.dataset && e.target.dataset.act === "open") {
+    openRoom(e.target.dataset.id);
   }
 });

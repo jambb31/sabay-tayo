@@ -258,6 +258,60 @@ export function discountOptions(selectedId) {
   return html;
 }
 
+// The full details of one room. Passengers see it before joining, drivers before accepting.
+function detailRow(label, value) {
+  return '<tr><th scope="row">' + label + '</th><td>' + value + '</td></tr>';
+}
+
+export function roomDetailHTML(g) {
+  const n = g.members.length;
+  let word = "Joinable";
+  let cls = "";
+  if (g.status === "open" && n >= 3) {
+    word = "Urgent";
+    cls = "urgent";
+  } else if (g.status === "full") {
+    word = "Full";
+    cls = "ready";
+  } else if (g.status === "ready") {
+    word = "Ready";
+    cls = "ready";
+  } else if (g.status === "accepted") {
+    word = "Driver accepted";
+    cls = "ready";
+  } else if (g.status === "ontrip") {
+    word = "On the way";
+    cls = "ready";
+  } else if (g.status === "done") {
+    word = "Finished";
+    cls = "ready";
+  } else if (g.status === "cancelled") {
+    word = "Cancelled";
+    cls = "urgent";
+  }
+
+  let html = '<div class="row"><h1>' + esc(g.destination) + '</h1><span class="badge ' + cls + '">' + word + '</span></div>';
+  html += '<p class="small">Group ' + esc(tag(g)) + '</p>';
+
+  html += '<div class="scroll"><table><caption>Room details</caption><tbody>';
+  html += detailRow("From", esc(g.origin));
+  html += detailRow("To", esc(g.destination));
+  html += detailRow("Leaves at", time12(g.depart));
+  html += detailRow("Seats taken", n + " of 4");
+  html += detailRow("Total fare", money(g.fare));
+  html += '</tbody></table></div>';
+
+  html += fareTable(g, false);
+
+  html += '<p>Each pays ' + money(g.fare / n) + ' now.';
+  if (g.status === "open" && n < 4) {
+    html += ' If one more passenger joins, each pays ' + money(g.fare / (n + 1)) + '.';
+  }
+  html += '</p>';
+  html += ratesHTML();
+  return html;
+}
+
 // Table of what every passenger pays. full = true also shows discount, load fee, extra km fee and total.
 export function fareTable(g, full) {
   const share = shareOf(g);
@@ -467,7 +521,7 @@ export function watchUser(role) {
       const p = snap.data();
       p.uid = u.uid;
       if (role && p.role !== role) {
-        location.href = HOME[p.role];
+        location.href = HOME[p.role] + location.search; // keep ?group=... so a scanned room still opens
         return;
       }
 
@@ -573,9 +627,10 @@ export async function voteGo(id, user, yes) {
   });
 }
 
-// The QR code holds this link. A phone camera opens it and the driver sees the group.
+// The QR code holds this link. A phone camera opens it and shows the full room.
+// A passenger sees the room with a Join button. A driver is sent on to driver.html with the same room.
 export function scanLink(id) {
-  return siteFolder() + "driver.html?group=" + id;
+  return siteFolder() + "student.html?group=" + id;
 }
 
 export async function acceptGroup(id, driver) {

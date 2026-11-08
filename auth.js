@@ -26,14 +26,15 @@ function getRole() {
   return document.querySelector("[name=role]:checked").value;
 }
 
-// QR scans come back here: after logging in, go to the page the person came from.
+// QR scans come back here: after logging in, go to your own page and keep the ?group=... part,
+// so the scanned room opens right away (a driver is sent to driver.html, a passenger to student.html).
 function goHome(profile) {
   const next = getParam("next");
-  if (next && next.indexOf(HOME[profile.role]) === 0) {
-    location.href = next;
-  } else {
-    location.href = HOME[profile.role];
+  let query = "";
+  if (next && next.indexOf("?") !== -1) {
+    query = next.slice(next.indexOf("?"));
   }
+  location.href = HOME[profile.role] + query;
 }
 
 // Only passengers need a TSU student email, so only they get that hint.

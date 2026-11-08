@@ -177,6 +177,16 @@ header {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 
+/* a card you can tap to open the full room */
+.card.clickable {
+  cursor: pointer;
+}
+
+.card.clickable:focus {
+  outline: 3px solid #ffc107;
+  outline-offset: 2px;
+}
+
 .grid .empty-card {
   grid-column: 1 / -1;
 }
