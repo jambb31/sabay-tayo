@@ -32,4 +32,4 @@ Create the admin account (admin@sabaytayo.com) FIRST.
 ## 5. Install as an app (PWA)
 - Android / Chrome / Edge: tap "Install app" in the header.
 - iPhone (Safari): Share button, then "Add to Home Screen".
-- When you change any file, change CACHE = "sabay-tayo-v7" in sw.js to v8, v9, ... so phones update.
+- When you change any file, change CACHE = "sabay-tayo-v8" in sw.js to v9, v10, ... so phones update.

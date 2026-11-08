@@ -1,6 +1,6 @@
 // Service worker: lets the site install as an app and open the pages again when the signal is bad.
 // Live data (Firebase) is never cached here. Only the website files are.
-const CACHE = "sabay-tayo-v7";
+const CACHE = "sabay-tayo-v8";
 const FILES = [
   "./", "index.html", "auth.html", "student.html", "driver.html", "admin.html", "offline.html",
   "style.css", "app.js", "auth.js", "student.js", "driver.js", "admin.js", "pwa.js",
@@ -35,7 +35,7 @@ self.addEventListener("activate", function (event) {
 // Online: always load the newest file (and keep a copy). Offline: use the saved copy.
 async function answer(request) {
   try {
-    const fresh = await fetch(request);
+    const fresh = await fetch(request, { cache: "no-cache" }); // ask the server every time, skip the browser's old copy
     if (fresh.ok) {
       const cache = await caches.open(CACHE);
       cache.put(request, fresh.clone());
