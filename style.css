@@ -1,16 +1,14 @@
-/* ---------- Colors (CSS variables - Week 6 PPT) ---------- */
+/* ---------- Colors (CSS variables) ---------- */
 :root {
   --blue: #0d6efd;
-  --blue-dark: #0b5ed7;
   --navy: #0a2a66;
-  --gold: #ffc107;
   --green: #198754;
   --red: #dc3545;
-  --bg: #eef2f7;
+  --bg: #f0f2f5;
   --text: #1b2433;
 }
 
-/* ---------- Base & Universal Selector (Week 5 PPT) ---------- */
+/* ---------- Base ---------- */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -18,70 +16,51 @@
 }
 
 body {
-  font-family: "Plus Jakarta Sans", Arial, sans-serif;
-  font-size: 16px;
-  background-color: var(--bg);
+  font-family: "Plus Jakarta Sans", system-ui, Arial, sans-serif;
+  background: var(--bg);
   color: var(--text);
-  line-height: 1.6;
+  line-height: 1.55;
+  overflow-x: hidden;
 }
 
 main {
-  width: 94%;
   max-width: 960px;
-  margin: 24px auto;
-  padding: 0 12px;
+  margin: 20px auto;
+  padding: 0 16px;
 }
 
-/* Group Selector (Week 5 PPT) */
 h1,
 h2,
 h3 {
-  color: var(--navy);
-  line-height: 1.25;
-  margin-bottom: 10px;
-}
-
-h1 {
-  font-size: 1.75rem;
-}
-
-h2 {
-  font-size: 1.35rem;
-  margin-top: 22px;
+  line-height: 1.2;
+  margin-bottom: 8px;
 }
 
 footer {
   text-align: center;
-  padding: 28px 16px;
-  margin-top: 32px;
+  padding: 24px;
   color: #5b667a;
-  font-size: 0.9rem;
-  border-top: 1px solid #dbe2ee;
-  background-color: #ffffff;
 }
 
-/* Attribute Selector + !important Cascade Rule (Week 5 PPT) */
 [hidden] {
   display: none !important;
 }
 
 /* ---------- Header ---------- */
 header {
-  background-color: var(--navy);
-  color: #ffffff;
-  border-bottom: 3px solid var(--blue);
-  box-shadow: 0 2px 10px rgba(10, 42, 102, 0.15);
+  background: var(--navy);
+  color: #fff;
 }
 
 .bar {
   max-width: 960px;
-  margin: 0 auto;
+  margin: auto;
   padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .logo {
@@ -89,20 +68,16 @@ header {
   align-items: center;
   gap: 10px;
   font-weight: 800;
-  font-size: 1.35rem;
-  color: #ffffff;
-  text-decoration: none;
-  letter-spacing: -0.3px;
+  font-size: 1.3rem;
 }
 
+/* the small logo in the header */
 .mark {
   display: block;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
-  background-color: #ffffff;
-  padding: 2px;
-  border: 2px solid #cfe2ff;
+  background: #fff;
 }
 
 .bar-right {
@@ -115,22 +90,16 @@ header {
   display: flex;
   align-items: center;
   gap: 10px;
-  background-color: rgba(255, 255, 255, 0.12);
-  padding: 4px 6px 4px 12px;
-  border-radius: 99px;
 }
 
-#who {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #ffffff;
+#install {
+  margin: 0;
+  padding: 6px 12px;
 }
 
 #session .btn {
   margin: 0;
-  padding: 6px 14px;
-  font-size: 0.85rem;
-  border-radius: 99px;
+  padding: 6px 12px;
 }
 
 /* ---------- Buttons ---------- */
@@ -138,106 +107,70 @@ header {
   display: inline-block;
   border: 0;
   border-radius: 10px;
-  padding: 10px 18px;
-  font-family: inherit;
-  font-size: 0.95rem;
+  padding: 10px 16px;
+  font: inherit;
   font-weight: 700;
   cursor: pointer;
-  background-color: var(--blue);
-  color: #ffffff;
+  background: var(--blue);
+  color: #fff;
   text-decoration: none;
-  text-align: center;
-  margin: 4px 6px 4px 0;
-  box-shadow: 0 2px 6px rgba(13, 110, 253, 0.25);
-  transition: background-color 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+  margin: 2px 4px 2px 0;
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
 .btn:hover {
-  background-color: var(--blue-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.35);
+  transform: scale(1.05);
 }
 
 .btn.light {
-  background-color: #ffffff;
+  background: #fff;
   color: var(--navy);
-  box-shadow: none;
-}
-
-.btn.light:hover {
-  background-color: #f1f5f9;
 }
 
 .btn.line {
-  border: 1px solid #cbd5e1;
+  border: 1px solid #b8c3d6;
 }
 
 .btn.green {
-  background-color: var(--green);
-  box-shadow: 0 2px 6px rgba(25, 135, 84, 0.25);
-}
-
-.btn.green:hover {
-  background-color: #146c43;
+  background: var(--green);
 }
 
 .btn.red {
-  background-color: var(--red);
-  box-shadow: 0 2px 6px rgba(220, 53, 69, 0.25);
-}
-
-.btn.red:hover {
-  background-color: #b02a37;
+  background: var(--red);
 }
 
 .btn.full {
-  display: block;
   width: 100%;
-  margin: 8px 0 0;
+  margin: 6px 0 0;
 }
 
-/* ---------- Cards and Grid (Week 6 Box Model) ---------- */
+/* ---------- Cards and grid ---------- */
 .card {
-  background-color: #ffffff;
-  border-radius: 14px;
-  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
   border: 1px solid #dbe2ee;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 12px rgba(10, 42, 102, 0.05);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-}
-
-.card h1,
-.card h2,
-.card h3 {
-  margin-top: 0;
+  margin-bottom: 14px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card.ready {
-  border: 1px solid #b7ebcd;
-  border-left: 5px solid var(--green);
+  border: 2px solid var(--green);
 }
 
 .card.waiting {
-  border: 1px solid #f5c2c7;
-  border-left: 5px solid var(--red);
+  border: 2px solid var(--red);
 }
 
 .card.clickable {
   cursor: pointer;
 }
 
-.card.clickable:hover {
-  border-color: var(--blue);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(13, 110, 253, 0.12);
-}
-
 /* 1 column on phones, 2 columns on tablets, 3 columns on laptops */
 .grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: 14px;
 }
 
 .grid .card {
@@ -245,14 +178,12 @@ header {
 }
 
 .grid .card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(10, 42, 102, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 
 .grid .empty-card {
   grid-column: 1 / -1;
-  text-align: center;
-  color: #5b667a;
 }
 
 .row {
@@ -260,7 +191,7 @@ header {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  margin: 8px 0;
+  margin: 6px 0;
 }
 
 .center {
@@ -272,51 +203,49 @@ header {
   color: #5b667a;
 }
 
-/* ---------- Badges and Seat Avatars ---------- */
+/* ---------- Badges and avatars ---------- */
 .badge {
   display: inline-block;
-  padding: 3px 12px;
+  padding: 2px 10px;
   border-radius: 99px;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: #ffffff;
-  background-color: var(--blue);
+  color: #fff;
+  background: var(--blue);
 }
 
 .badge.ready {
-  background-color: var(--green);
+  background: var(--green);
 }
 
 .badge.urgent {
-  background-color: var(--red);
+  background: var(--red);
 }
 
 .badge.wait {
-  background-color: #e08a00;
+  background: #e08a00;
 }
 
 .av {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background-color: #e7f0ff;
-  border: 2px solid #b6d4fe;
+  background: #e7f0ff;
   color: var(--navy);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 800;
   margin-right: 4px;
 }
 
 .av.empty {
-  background-color: #f8fafc;
-  border: 2px dashed #cbd5e1;
+  background: #f0f2f5;
   color: #8a94a6;
 }
 
-/* ---------- Messages, Banners & Poll ---------- */
+/* ---------- Messages and banners ---------- */
 .msg {
   margin-top: 10px;
   font-weight: 700;
@@ -327,27 +256,27 @@ header {
 }
 
 .banner {
-  background-color: #e6f4ec;
+  background: #e6f4ec;
   border: 1px solid var(--green);
   color: #0d5a35;
   border-radius: 12px;
-  padding: 14px;
+  padding: 12px;
   font-weight: 700;
-  margin: 12px 0;
+  margin-bottom: 12px;
 }
 
 .banner.red {
-  background-color: #fdecee;
+  background: #fdecee;
   border-color: var(--red);
   color: #8f1d29;
 }
 
 .poll {
-  background-color: #fffbeb;
-  border: 1px solid #f59e0b;
+  background: #fff8e6;
+  border: 1px solid #f0c36d;
   border-radius: 12px;
-  padding: 14px;
-  margin: 14px 0;
+  padding: 12px;
+  margin: 10px 0;
   text-align: left;
 }
 
@@ -355,32 +284,29 @@ header {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background-color: #e6f4ec;
-  border: 2px solid var(--green);
+  background: #e6f4ec;
   color: var(--green);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2.2rem;
-  margin: 8px auto 14px;
+  margin: 8px auto;
 }
 
-/* ---------- QR Code Box ---------- */
+/* The QR code: white box with a border. Tap it to make it bigger. */
 .qrbox {
   width: 220px;
   max-width: 100%;
-  margin: 12px auto 6px;
-  padding: 6px;
-  border: 2px dashed var(--blue);
-  border-radius: 14px;
-  background-color: #ffffff;
+  margin: 10px auto;
+  border: 1px solid #dbe2ee;
+  border-radius: 12px;
+  background: #fff;
   cursor: zoom-in;
-  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.1);
   transition: width 0.3s ease;
 }
 
 .qrbox.big {
-  width: 380px;
+  width: 420px;
   cursor: zoom-out;
 }
 
@@ -390,43 +316,32 @@ header {
   height: auto;
 }
 
-/* ---------- Forms (Week 4 & Week 5 PPT) ---------- */
+/* ---------- Forms ---------- */
 label {
   display: block;
   font-weight: 700;
   margin: 12px 0 4px;
-  color: var(--navy);
 }
 
 input,
 select,
 textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px;
   border: 1px solid #b8c3d6;
   border-radius: 10px;
-  font-family: inherit;
-  font-size: 0.95rem;
-  background-color: #fbfcfe;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  font: inherit;
 }
 
-input:focus,
-select:focus,
-textarea:focus {
-  background-color: #ffffff;
-  border-color: var(--blue);
-  outline: 2px solid #b6d4fe;
-}
-
-input[type="radio"] {
+input[type=radio] {
   width: auto;
-  margin-right: 6px;
 }
 
 a:focus,
-button:focus {
-  outline: 3px solid var(--gold);
+button:focus,
+input:focus,
+select:focus {
+  outline: 3px solid #ffc107;
   outline-offset: 2px;
 }
 
@@ -437,70 +352,61 @@ fieldset {
 
 legend {
   font-weight: 700;
-  margin: 12px 0 6px;
+  margin: 12px 0 4px;
   padding: 0;
-  color: var(--navy);
 }
 
-/* ---------- Tables (Week 4 PPT) ---------- */
+/* ---------- Tables ---------- */
 table {
   width: 100%;
   border-collapse: collapse;
-  background-color: #ffffff;
-  margin: 12px 0;
-  border-radius: 10px;
-  overflow: hidden;
+  background: #fff;
+  margin: 10px 0;
+}
+
+main > table {
+  display: block;
+  overflow-x: auto;
+  width: 100%;
 }
 
 th,
 td {
-  padding: 10px 12px;
+  padding: 10px;
   border: 1px solid #dbe2ee;
   text-align: left;
 }
 
 th {
-  background-color: #e7f0ff;
-  color: var(--navy);
-  font-weight: 700;
-}
-
-tr:hover td {
-  background-color: #f8faff;
+  background: #e7f0ff;
 }
 
 caption {
   text-align: left;
   font-weight: 700;
-  padding: 4px 0 6px;
-  color: var(--navy);
+  padding: 4px 0;
 }
 
 td input {
   width: 90px;
-  padding: 6px 8px;
-}
-
-td select {
-  padding: 6px 8px;
+  padding: 6px;
 }
 
 .scroll {
   overflow-x: auto;
+  width: 100%;
 }
 
-/* ---------- Welcome Home Page ---------- */
+/* ---------- Home page ---------- */
 .hero2 {
-  background-color: var(--navy);
-  background-image: linear-gradient(135deg, #0d6efd 0%, #0a2a66 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, #0d6efd 0%, #0a2a66 100%);
+  color: #fff;
   border-radius: 24px;
-  padding: 60px 24px;
+  padding: 72px 24px;
   text-align: center;
   margin-top: 8px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 25px rgba(10, 42, 102, 0.2);
 }
 
 .hero2::before,
@@ -508,7 +414,7 @@ td select {
   content: "";
   position: absolute;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .hero2::before {
@@ -531,75 +437,68 @@ td select {
   position: relative;
 }
 
+/* the big logo on the welcome page */
 .herologo {
   display: block;
-  width: 190px;
+  width: 200px;
   max-width: 60%;
   height: auto;
   margin: 0 auto 20px;
-  padding: 12px;
-  border-radius: 22px;
-  background-color: #ffffff;
+  padding: 10px;
+  border-radius: 20px;
+  background: #fff;
   position: relative;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
 }
 
 .hero2 h1 {
-  color: #ffffff;
   font-size: 2.2rem;
   margin: 0 auto 14px;
-  max-width: 540px;
+  max-width: 16ch;
 }
 
 .hero2 p {
-  max-width: 520px;
+  max-width: 48ch;
   margin: 0 auto 28px;
-  opacity: 0.94;
+  opacity: 0.92;
 }
 
 .btn.enter {
-  background-color: #ffffff;
+  background: #fff;
   color: var(--navy);
   padding: 14px 48px;
   font-size: 1.1rem;
-  border-radius: 99px;
+  border-radius: 999px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-}
-
-.btn.enter:hover {
-  background-color: var(--gold);
-  color: var(--navy);
 }
 
 .steps {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
-  margin: 22px 0;
+  gap: 14px;
+  margin: 18px 0;
 }
 
 .steps .card {
   margin: 0;
-  border-top: 4px solid var(--blue);
 }
 
 .step {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background-color: #e7f0ff;
+  background: #e7f0ff;
   color: var(--blue);
   font-weight: 800;
   margin-bottom: 10px;
 }
 
-/* ---------- Log In / Sign Up Page ---------- */
+/* ---------- Log in / sign up page ---------- */
 .authbox {
   max-width: 440px;
-  margin: 28px auto;
+  margin: 24px auto;
 }
 
 .authbox .card {
@@ -608,7 +507,7 @@ td select {
 
 .seg {
   display: flex;
-  background-color: #e3e8f1;
+  background: #e3e8f1;
   border-radius: 12px;
   padding: 4px;
   gap: 4px;
@@ -621,18 +520,16 @@ td select {
   background: none;
   padding: 10px;
   border-radius: 9px;
-  font-family: inherit;
-  font-size: 0.95rem;
+  font: inherit;
   font-weight: 700;
   color: #4a5568;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .seg button.on {
-  background-color: #ffffff;
+  background: #fff;
   color: var(--blue);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .pills {
@@ -648,45 +545,37 @@ td select {
   padding: 10px;
   text-align: center;
   cursor: pointer;
-  background-color: #ffffff;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  background: #fff;
 }
 
-.pills label:hover {
-  border-color: var(--blue);
-  background-color: #f8faff;
-}
-
-/* ---------- Admin Page ---------- */
+/* ---------- Admin page ---------- */
 .photobox {
-  background-color: #ffffff;
-  border: 2px solid var(--blue);
+  background: #fff;
+  border: 1px solid #dbe2ee;
   border-radius: 14px;
   padding: 16px;
-  margin-top: 16px;
-  box-shadow: 0 8px 24px rgba(10, 42, 102, 0.12);
+  margin-top: 14px;
 }
 
 .photobox img {
   display: block;
   max-width: 100%;
-  border-radius: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
-/* ---------- Ride Tracker (5 Progress Steps) ---------- */
+/* ---------- Ride tracker (progress steps) ---------- */
 .tracker {
-  list-style-type: none;
+  list-style: none;
   display: flex;
   justify-content: space-between;
   gap: 4px;
-  margin: 16px 0 10px;
+  margin: 14px 0 8px;
 }
 
 .tracker li {
   flex: 1;
   text-align: center;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   color: #8a94a6;
   position: relative;
 }
@@ -699,7 +588,7 @@ td select {
   height: 28px;
   margin: 0 auto 4px;
   border-radius: 50%;
-  background-color: #e3e8f1;
+  background: #e3e8f1;
   color: #5b667a;
   font-weight: 800;
   font-size: 0.8rem;
@@ -707,6 +596,7 @@ td select {
   z-index: 1;
 }
 
+/* the line that joins one step to the next */
 .tracker li::before {
   content: "";
   position: absolute;
@@ -714,7 +604,7 @@ td select {
   left: -50%;
   width: 100%;
   height: 3px;
-  background-color: #e3e8f1;
+  background: #e3e8f1;
 }
 
 .tracker li:first-child::before {
@@ -726,12 +616,12 @@ td select {
 }
 
 .tracker li.done span {
-  background-color: var(--green);
-  color: #ffffff;
+  background: var(--green);
+  color: #fff;
 }
 
 .tracker li.done::before {
-  background-color: var(--green);
+  background: var(--green);
 }
 
 .tracker li.now {
@@ -740,25 +630,32 @@ td select {
 }
 
 .tracker li.now span {
-  background-color: var(--blue);
-  color: #ffffff;
+  background: var(--blue);
+  color: #fff;
   transform: scale(1.15);
 }
 
 .tracker li.now::before {
-  background-color: var(--green);
+  background: var(--green);
 }
 
-/* ---------- Passenger Options (PWD Discount + Heavy Load) ---------- */
+.eta {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 8px 0 12px;
+}
+
+/* ---------- My options (discount + heavy load) ---------- */
 .options {
-  background-color: #f3f7ff;
+  background: #f3f7ff;
   border: 1px solid #c9d9f5;
   border-radius: 12px;
-  padding: 14px;
-  margin: 12px 0;
+  padding: 12px;
+  margin: 10px 0;
   text-align: left;
 }
 
+/* ---------- Toggle switches ---------- */
 .switch {
   display: flex;
   align-items: center;
@@ -781,7 +678,7 @@ td select {
   width: 46px;
   height: 26px;
   border-radius: 99px;
-  background-color: #cbd5e1;
+  background: #cbd5e1;
   transition: background-color 0.3s ease;
 }
 
@@ -793,12 +690,12 @@ td select {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background-color: #ffffff;
+  background: #fff;
   transition: transform 0.3s ease;
 }
 
 .switch input:checked + .slider {
-  background-color: var(--green);
+  background: var(--green);
 }
 
 .switch input:checked + .slider::before {
@@ -806,15 +703,34 @@ td select {
 }
 
 .switch input:focus + .slider {
-  outline: 3px solid var(--gold);
+  outline: 3px solid #ffc107;
   outline-offset: 2px;
 }
 
-/* ---------- Fade-In Animation ---------- */
+/* ---------- Fare splitter ---------- */
+.splitrow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2px;
+  border-top: 1px solid #dbe2ee;
+  padding: 10px 0;
+  margin-top: 10px;
+}
+
+#sresult {
+  margin-top: 6px;
+}
+
+td select {
+  padding: 6px;
+}
+
+/* ---------- Fade-in animation ---------- */
 @keyframes fadeIn {
   0% {
     opacity: 0;
   }
+
   100% {
     opacity: 1;
   }
@@ -824,11 +740,17 @@ td select {
 .authbox,
 .card,
 .banner {
-  animation: fadeIn 0.4s ease-in;
+  animation: fadeIn 0.5s ease-in;
 }
 
-/* ---------- Responsive Media Queries ---------- */
+/* ---------- Media queries ---------- */
 @media screen and (min-width: 600px) {
+  .splitrow {
+    grid-template-columns: 1fr 2fr 1fr 1fr;
+    gap: 10px;
+    align-items: end;
+  }
+
   .grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -844,16 +766,29 @@ td select {
   }
 
   .hero2 h1 {
-    font-size: 2.8rem;
+    font-size: 3.2rem;
   }
 }
 
 @media screen and (max-width: 480px) {
   .hero2 {
-    padding: 44px 16px;
+    padding: 48px 16px;
   }
 
   .btn.enter {
     padding: 12px 36px;
+  }
+
+  th,
+  td {
+    padding: 8px 6px;
+    font-size: 0.85rem;
+  }
+
+  td .btn {
+    width: 100%;
+    margin: 2px 0;
+    padding: 6px 10px;
+    font-size: 0.8rem;
   }
 }

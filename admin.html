@@ -26,21 +26,25 @@
   <main>
     <h1>Driver verification</h1>
 
-    <table>
-      <caption>Registered drivers</caption>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Plate</th>
-          <th>License</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
-    <p id="empty" class="msg" hidden>No drivers have signed up yet.</p>
+    <div class="card">
+      <div class="scroll">
+        <table>
+          <caption>Registered drivers</caption>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Plate</th>
+              <th>License</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <p id="empty" class="msg" hidden>No drivers have signed up yet.</p>
+    </div>
 
     <div id="photobox" class="photobox" hidden>
       <img id="pic" alt="">
